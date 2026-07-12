@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>{{ title }}</h3>
+        <p>Renseignez le nom et l’abréviation de l’unité.</p>
+    </div>
+
+    <a href="{% url 'unit_list' %}" class="btn btn-light-premium">
+        <i class="bi bi-arrow-left"></i>
+        Retour
+    </a>
+</div>
+
+<div class="premium-panel">
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-12 col-md-6">
+            <label class="form-label">Nom</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label class="form-label">Abréviation</label>
+            {{ form.short_name }}
+            {{ form.short_name.errors }}
+        </div>
+
+        <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary-premium">
+                <i class="bi bi-check-circle"></i>
+                {{ button_label }}
+            </button>
+
+            <a href="{% url 'unit_list' %}" class="btn btn-light-premium">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

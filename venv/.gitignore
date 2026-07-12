@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.log
+
+# Environnement virtuel
+venv/
+.venv/
+env/
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# Variables secrètes
+.env
+.env.*
+!.env.example
+
+# VS Code
+.vscode/
+
+# IDE
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/

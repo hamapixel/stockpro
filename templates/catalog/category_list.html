@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Catégories{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Catégories</h3>
+        <p>Gérez les familles de produits de votre boutique.</p>
+    </div>
+
+    <a href="{% url 'category_create' %}" class="btn btn-primary-premium">
+        <i class="bi bi-plus-circle"></i>
+        Ajouter
+    </a>
+</div>
+
+<div class="premium-panel">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-12 col-md-10">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Rechercher une catégorie...">
+        </div>
+
+        <div class="col-12 col-md-2">
+            <button class="btn btn-light-premium w-100" type="submit">
+                <i class="bi bi-search"></i>
+                Chercher
+            </button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table premium-table align-middle">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for category in page_obj %}
+                    <tr>
+                        <td><strong>{{ category.name }}</strong></td>
+                        <td>{{ category.description|default:"-" }}</td>
+                        <td>
+                            {% if category.is_active %}
+                                <span class="badge badge-paid">Actif</span>
+                            {% else %}
+                                <span class="badge badge-cancelled">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'category_update' category.pk %}" class="btn btn-sm btn-light-premium">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a href="{% url 'category_delete' category.pk %}" class="btn btn-sm btn-danger-premium">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            Aucune catégorie trouvée.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Produits{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Produits</h3>
+        <p>Gérez vos articles, prix, stock et seuil d’alerte.</p>
+    </div>
+
+    <a href="{% url 'product_create' %}" class="btn btn-primary-premium">
+        <i class="bi bi-plus-circle"></i>
+        Ajouter produit
+    </a>
+</div>
+
+<div class="premium-panel mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-12 col-lg-5">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Rechercher par nom, référence ou code-barres...">
+        </div>
+
+        <div class="col-12 col-lg-3">
+            <select name="category" class="form-select">
+                <option value="">Toutes les catégories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <select name="stock" class="form-select">
+                <option value="">Tous les stocks</option>
+                <option value="available" {% if stock_status == "available" %}selected{% endif %}>Disponible</option>
+                <option value="low" {% if stock_status == "low" %}selected{% endif %}>Stock faible</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <button class="btn btn-light-premium w-100" type="submit">
+                <i class="bi bi-funnel"></i>
+                Filtrer
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3">
+    {% for product in page_obj %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="product-card">
+                <div class="product-image-box">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="product-placeholder">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="product-info">
+                    <div class="d-flex justify-content-between gap-2 align-items-start">
+                        <div>
+                            <h5>{{ product.name }}</h5>
+                            <span class="text-muted small">
+                                {{ product.category.name|default:"Sans catégorie" }}
+                            </span>
+                        </div>
+
+                        {% if product.is_low_stock %}
+                            <span class="badge badge-credit">Stock faible</span>
+                        {% else %}
+                            <span class="badge badge-paid">OK</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-meta">
+                        <div>
+                            <span>Prix vente</span>
+                            <strong>{{ product.sale_price|fcfa }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Stock</span>
+                            <strong>{{ product.stock_quantity }} {{ product.unit.short_name }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="product-actions">
+                        <a href="{% url 'product_detail' product.pk %}" class="btn btn-sm btn-light-premium">
+                            <i class="bi bi-eye"></i>
+                        </a>
+
+                        <a href="{% url 'product_update' product.pk %}" class="btn btn-sm btn-light-premium">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+
+                        <a href="{% url 'product_delete' product.pk %}" class="btn btn-sm btn-danger-premium">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="premium-panel">
+                <div class="empty-state">
+                    <i class="bi bi-box"></i>
+                    <p>Aucun produit trouvé.</p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

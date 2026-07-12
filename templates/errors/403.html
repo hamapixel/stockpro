@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Accès refusé{% endblock %}
+
+{% block content %}
+
+<div class="premium-panel">
+    <div class="delete-box">
+        <i class="bi bi-shield-lock"></i>
+        <h4>Accès refusé</h4>
+        <p>
+            Vous n’avez pas l’autorisation nécessaire pour accéder à cette page.
+        </p>
+
+        <a href="{% url 'dashboard' %}" class="btn btn-primary-premium">
+            Retour au tableau de bord
+        </a>
+    </div>
+</div>
+
+{% endblock %}

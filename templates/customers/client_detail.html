@@ -1,0 +1,605 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Détail client{% endblock %}
+
+{% block content %}
+
+<div class="client-detail-page">
+
+    <!-- =====================================================
+         EN-TÊTE
+    ====================================================== -->
+
+    <div class="page-header">
+
+        <div>
+            <h3>{{ client.full_name }}</h3>
+            <p>
+                Détail du client, achats, paiements et crédit restant.
+            </p>
+        </div>
+
+        <div class="client-detail-actions">
+
+            <a
+                href="{% url 'client_update' client.pk %}"
+                class="btn btn-primary-premium"
+            >
+                <i class="bi bi-pencil"></i>
+                Modifier
+            </a>
+
+            <a
+                href="{% url 'client_list' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Retour
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         PROFIL ET INDICATEURS
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <!-- PROFIL CLIENT -->
+
+        <div class="col-12 col-xl-4">
+
+            <div class="premium-panel h-100 client-profile-panel">
+
+                <div class="client-avatar-large">
+                    {{ client.full_name|first|upper }}
+                </div>
+
+                <h4 class="client-profile-name">
+                    {{ client.full_name }}
+                </h4>
+
+                <p class="client-profile-subtitle">
+                    Informations générales du client
+                </p>
+
+                <div class="quick-list mt-4 client-information-list">
+
+                    <div class="quick-row">
+
+                        <span>
+                            <i class="bi bi-telephone"></i>
+                            Téléphone
+                        </span>
+
+                        <strong>
+                            {{ client.phone|default:"-" }}
+                        </strong>
+
+                    </div>
+
+                    <div class="quick-row">
+
+                        <span>
+                            <i class="bi bi-geo-alt"></i>
+                            Adresse
+                        </span>
+
+                        <strong>
+                            {{ client.address|default:"-" }}
+                        </strong>
+
+                    </div>
+
+                    <div class="quick-row">
+
+                        <span>
+                            <i class="bi bi-envelope"></i>
+                            Email
+                        </span>
+
+                        <strong>
+                            {{ client.email|default:"-" }}
+                        </strong>
+
+                    </div>
+
+                    <div class="quick-row">
+
+                        <span>
+                            <i class="bi bi-calendar"></i>
+                            Créé le
+                        </span>
+
+                        <strong>
+                            {{ client.created_at|date:"d/m/Y" }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- INDICATEURS FINANCIERS -->
+
+        <div class="col-12 col-xl-8">
+
+            <div class="row g-3 client-metric-cards">
+
+                <div class="col-12 col-md-6">
+
+                    <div class="mini-card client-metric-card">
+
+                        <div class="mini-icon bg-soft-blue">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+
+                        <div class="client-metric-copy">
+
+                            <span>Nombre de ventes</span>
+
+                            <strong>
+                                {{ sales_count }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <div class="mini-card client-metric-card">
+
+                        <div class="mini-icon bg-soft-green">
+                            <i class="bi bi-bag-check"></i>
+                        </div>
+
+                        <div class="client-metric-copy">
+
+                            <span>Total achats</span>
+
+                            <strong>
+                                {{ total_sales|fcfa }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <div class="mini-card client-metric-card">
+
+                        <div class="mini-icon bg-soft-orange">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+
+                        <div class="client-metric-copy">
+
+                            <span>Total payé</span>
+
+                            <strong>
+                                {{ total_paid|fcfa }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <div class="mini-card client-metric-card">
+
+                        <div class="mini-icon bg-soft-red">
+                            <i class="bi bi-credit-card-2-back"></i>
+                        </div>
+
+                        <div class="client-metric-copy">
+
+                            <span>Dette restante</span>
+
+                            <strong>
+                                {{ total_remaining|fcfa }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- RÉSUMÉ CLIENT -->
+
+            <div class="premium-panel mt-3 client-summary-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h5>Résumé client</h5>
+
+                        <small>
+                            Situation financière actuelle du client
+                        </small>
+                    </div>
+
+                </div>
+
+                <div class="client-summary-grid">
+
+                    <div class="client-summary-card">
+
+                        <span>Statut du client</span>
+
+                        {% if total_remaining > 0 %}
+
+                            <strong class="text-danger">
+                                <i class="bi bi-exclamation-circle"></i>
+                                Client à crédit
+                            </strong>
+
+                        {% else %}
+
+                            <strong class="text-success">
+                                <i class="bi bi-check-circle"></i>
+                                Aucun crédit
+                            </strong>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="client-summary-card">
+
+                        <span>Total crédit restant</span>
+
+                        <strong class="{% if total_remaining > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ total_remaining|fcfa }}
+                        </strong>
+
+                    </div>
+
+                    <div class="client-summary-card">
+
+                        <span>Nombre de paiements</span>
+
+                        <strong>
+                            {{ payment_count }}
+                        </strong>
+
+                    </div>
+
+                    <div class="client-summary-card">
+
+                        <span>Nombre de ventes</span>
+
+                        <strong>
+                            {{ sales_count }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         HISTORIQUE DES VENTES — 100 % LARGEUR
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12">
+
+            <div class="premium-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h5>Historique des ventes</h5>
+
+                        <small>
+                            Les 10 dernières ventes de ce client
+                        </small>
+                    </div>
+
+                    <div class="client-history-count">
+                        <i class="bi bi-receipt"></i>
+                        {{ sales_count }} vente{{ sales_count|pluralize }}
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table premium-table align-middle client-history-table">
+
+                        <thead>
+                            <tr>
+                                <th>N° Vente</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Payé</th>
+                                <th>Reste</th>
+                                <th>Statut</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for sale in recent_sales %}
+
+                                <tr>
+
+                                    <td>
+                                        <strong>
+                                            {{ sale.sale_number }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        {{ sale.sale_date|date:"d/m/Y H:i" }}
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            {{ sale.total|fcfa }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        <span class="text-success fw-bold">
+                                            {{ sale.amount_paid|fcfa }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="{% if sale.remaining_amount > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                            {{ sale.remaining_amount|fcfa }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+
+                                        {% if sale.payment_status == "paid" %}
+
+                                            <span class="badge badge-paid">
+                                                Payé
+                                            </span>
+
+                                        {% elif sale.payment_status == "partial" %}
+
+                                            <span class="badge badge-partial">
+                                                Partiel
+                                            </span>
+
+                                        {% elif sale.payment_status == "credit" %}
+
+                                            <span class="badge badge-credit">
+                                                Crédit
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge badge-cancelled">
+                                                Annulé
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td class="text-end">
+
+                                        <a
+                                            href="{% url 'sale_detail' sale.pk %}"
+                                            class="btn btn-sm btn-light-premium"
+                                            title="Voir la vente"
+                                        >
+                                            <i class="bi bi-eye"></i>
+                                            Voir
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="7"
+                                        class="text-center text-muted py-5"
+                                    >
+                                        <div class="empty-state">
+                                            <i class="bi bi-receipt"></i>
+
+                                            <p>
+                                                Aucune vente enregistrée pour ce client.
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         HISTORIQUE DES PAIEMENTS — 100 % LARGEUR
+    ====================================================== -->
+
+    <div class="row g-3">
+
+        <div class="col-12">
+
+            <div class="premium-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h5>Historique des paiements</h5>
+
+                        <small>
+                            Les derniers paiements enregistrés pour ce client
+                        </small>
+                    </div>
+
+                    <div class="client-history-count">
+                        <i class="bi bi-cash-stack"></i>
+                        {{ payment_count }} paiement{{ payment_count|pluralize }}
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table premium-table align-middle client-history-table">
+
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>N° Vente</th>
+                                <th>Montant</th>
+                                <th>Mode de paiement</th>
+                                <th>Note</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for payment in recent_payments %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ payment.payment_date|date:"d/m/Y H:i" }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if payment.sale %}
+
+                                            <strong>
+                                                {{ payment.sale.sale_number }}
+                                            </strong>
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+                                                -
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+                                        <strong class="client-payment-amount">
+                                            {{ payment.amount|fcfa }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        <span class="client-payment-method">
+                                            <i class="bi bi-wallet2"></i>
+                                            {{ payment.get_payment_method_display }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        {{ payment.notes|default:"-" }}
+                                    </td>
+
+                                    <td class="text-end">
+
+                                        {% if payment.sale %}
+
+                                            <a
+                                                href="{% url 'sale_detail' payment.sale.pk %}"
+                                                class="btn btn-sm btn-light-premium"
+                                                title="Voir la vente"
+                                            >
+                                                <i class="bi bi-eye"></i>
+                                                Voir
+                                            </a>
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+                                                -
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="6"
+                                        class="text-center text-muted py-5"
+                                    >
+                                        <div class="empty-state">
+                                            <i class="bi bi-cash"></i>
+
+                                            <p>
+                                                Aucun paiement enregistré pour ce client.
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

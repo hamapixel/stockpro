@@ -1,0 +1,1177 @@
+{% extends "base.html" %}
+
+{% block title %}Ajustement stock{% endblock %}
+
+{% block content %}
+
+<div class="stock-adjustment-page">
+
+    <div class="page-header">
+        <div>
+            <h3>Ajustement stock</h3>
+            <p>
+                Recherchez un produit puis cliquez dessus pour l’ajouter
+                à l’entrée ou à la sortie de stock.
+            </p>
+        </div>
+
+        <a href="{% url 'stock_list' %}" class="btn btn-light-premium">
+            <i class="bi bi-arrow-left"></i>
+            Retour
+        </a>
+    </div>
+
+    <!-- =====================================================
+         RECHERCHE GLOBALE
+    ====================================================== -->
+
+    <div class="premium-panel stock-search-panel mb-4" id="stockSearchPanel">
+
+        <div class="panel-header">
+            <div>
+                <h5>Rechercher un produit</h5>
+                <small>
+                    Tapez le nom, la référence ou le code-barres.
+                </small>
+            </div>
+
+            <div class="stock-search-status" id="stockSearchStatus">
+                Commencez à saisir un produit
+            </div>
+        </div>
+
+        <div class="stock-main-search">
+
+            <i class="bi bi-search stock-search-icon"></i>
+
+            <input
+                type="search"
+                id="stockProductSearchInput"
+                class="form-control"
+                placeholder="Exemple : ampoule 20W, STB-001..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                class="btn stock-clear-search-btn"
+                id="clearStockSearchBtn"
+                title="Effacer"
+            >
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+        </div>
+
+        <div
+            class="stock-product-results"
+            id="stockProductResults"
+            aria-live="polite"
+        >
+            <div class="stock-search-empty-state">
+                <div class="stock-search-state-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+
+                <strong>Recherchez vos produits</strong>
+
+                <span>
+                    Les produits trouvés apparaîtront ici et resteront visibles.
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         FORMULAIRE
+    ====================================================== -->
+
+    <div class="premium-panel">
+
+        <div class="stock-switch mb-4">
+
+            <button
+                type="button"
+                class="stock-switch-btn {% if movement_type == 'in' %}active{% endif %}"
+                data-type="in"
+            >
+                <i class="bi bi-plus-circle"></i>
+                Entrée stock
+            </button>
+
+            <button
+                type="button"
+                class="stock-switch-btn {% if movement_type == 'out' %}active danger{% endif %}"
+                data-type="out"
+            >
+                <i class="bi bi-dash-circle"></i>
+                Sortie stock
+            </button>
+
+        </div>
+
+        <form method="post" id="stockAdjustmentForm" novalidate>
+            {% csrf_token %}
+
+            <input
+                type="hidden"
+                name="movement_type"
+                id="movementTypeInput"
+                value="{{ movement_type }}"
+            >
+
+            <div class="panel-header mb-3">
+                <div>
+                    <h5>Produits sélectionnés</h5>
+                    <small>
+                        Saisissez la quantité et éventuellement un motif.
+                    </small>
+                </div>
+
+                <div class="stock-selected-counter">
+                    <i class="bi bi-boxes"></i>
+                    <span id="selectedProductCount">0 produit</span>
+                </div>
+            </div>
+
+            <div class="table-responsive stock-lines-wrapper">
+
+                <table class="table premium-table align-middle stock-lines-table">
+
+                    <thead>
+                        <tr>
+                            <th style="min-width: 360px;">
+                                Produit
+                            </th>
+
+                            <th style="min-width: 160px;">
+                                Quantité
+                            </th>
+
+                            <th style="min-width: 280px;">
+                                Motif / note
+                            </th>
+
+                            <th
+                                class="text-end"
+                                style="min-width: 100px;"
+                            >
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="stockLinesBody">
+
+                        {% for row in posted_rows %}
+
+                            <tr
+                                class="stock-line-row"
+                                data-stock=""
+                            >
+
+                                <td>
+                                    <input
+                                        type="hidden"
+                                        name="product"
+                                        class="product-id-input"
+                                        value="{{ row.product_id }}"
+                                    >
+
+                                    <input
+                                        type="hidden"
+                                        name="product_label"
+                                        class="product-label-hidden"
+                                        value="{{ row.product_label }}"
+                                    >
+
+                                    <div class="stock-selected-product {% if not row.product_id %}is-empty{% endif %}">
+
+                                        <div class="stock-selected-product-icon">
+                                            {% if row.product_id %}
+                                                <i class="bi bi-box-seam-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-plus-lg"></i>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="stock-selected-product-info">
+
+                                            <strong class="selected-product-name">
+                                                {% if row.product_label %}
+                                                    {{ row.product_label }}
+                                                {% else %}
+                                                    Ligne vide
+                                                {% endif %}
+                                            </strong>
+
+                                            <span class="selected-product-meta">
+                                                {% if row.product_id %}
+                                                    Produit sélectionné
+                                                {% else %}
+                                                    Cliquez sur « Choisir »
+                                                {% endif %}
+                                            </span>
+
+                                            <small class="stock-line-warning"></small>
+
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-light-premium choose-stock-product-btn"
+                                        >
+                                            <i class="bi bi-search"></i>
+                                            Choisir
+                                        </button>
+
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <input
+                                        type="number"
+                                        name="quantity"
+                                        value="{{ row.quantity }}"
+                                        class="form-control stock-quantity-input"
+                                        min="0.01"
+                                        step="0.01"
+                                        placeholder="Ex : 10"
+                                    >
+                                </td>
+
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="reason"
+                                        value="{{ row.reason }}"
+                                        class="form-control"
+                                        placeholder="Motif facultatif"
+                                    >
+                                </td>
+
+                                <td class="text-end">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-danger-premium remove-line-btn"
+                                        title="Supprimer"
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="stock-form-actions mt-3">
+
+                <div class="d-flex gap-2 flex-wrap">
+
+                    <button
+                        type="button"
+                        class="btn btn-light-premium"
+                        id="addStockLineBtn"
+                    >
+                        <i class="bi bi-plus-circle"></i>
+                        Ajouter une ligne
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-light-premium"
+                        id="focusStockSearchBtn"
+                    >
+                        <i class="bi bi-search"></i>
+                        Rechercher un produit
+                    </button>
+
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+
+                    <a
+                        href="{% url 'stock_list' %}"
+                        class="btn btn-light-premium"
+                    >
+                        Annuler
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary-premium"
+                        id="submitStockBtn"
+                    >
+                        <i class="bi bi-check-circle"></i>
+                        Valider l’opération
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     MODÈLE D’UNE NOUVELLE LIGNE
+========================================================= -->
+
+<template id="stockLineTemplate">
+
+    <tr class="stock-line-row" data-stock="">
+
+        <td>
+            <input
+                type="hidden"
+                name="product"
+                class="product-id-input"
+            >
+
+            <input
+                type="hidden"
+                name="product_label"
+                class="product-label-hidden"
+            >
+
+            <div class="stock-selected-product is-empty">
+
+                <div class="stock-selected-product-icon">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+
+                <div class="stock-selected-product-info">
+
+                    <strong class="selected-product-name">
+                        Ligne vide
+                    </strong>
+
+                    <span class="selected-product-meta">
+                        Cliquez sur « Choisir »
+                    </span>
+
+                    <small class="stock-line-warning"></small>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-light-premium choose-stock-product-btn"
+                >
+                    <i class="bi bi-search"></i>
+                    Choisir
+                </button>
+
+            </div>
+        </td>
+
+        <td>
+            <input
+                type="number"
+                name="quantity"
+                class="form-control stock-quantity-input"
+                min="0.01"
+                step="0.01"
+                placeholder="Ex : 10"
+            >
+        </td>
+
+        <td>
+            <input
+                type="text"
+                name="reason"
+                class="form-control"
+                placeholder="Motif facultatif"
+            >
+        </td>
+
+        <td class="text-end">
+            <button
+                type="button"
+                class="btn btn-sm btn-danger-premium remove-line-btn"
+            >
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+
+    </tr>
+
+</template>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchUrl = "{% url 'product_search_api' %}";
+
+    const form = document.getElementById("stockAdjustmentForm");
+    const body = document.getElementById("stockLinesBody");
+    const template = document.getElementById("stockLineTemplate");
+
+    const searchPanel = document.getElementById("stockSearchPanel");
+    const searchInput = document.getElementById("stockProductSearchInput");
+    const searchResults = document.getElementById("stockProductResults");
+    const searchStatus = document.getElementById("stockSearchStatus");
+    const clearSearchBtn = document.getElementById("clearStockSearchBtn");
+
+    const switchButtons = document.querySelectorAll(".stock-switch-btn");
+    const movementInput = document.getElementById("movementTypeInput");
+
+    const addLineBtn = document.getElementById("addStockLineBtn");
+    const focusSearchBtn = document.getElementById("focusStockSearchBtn");
+    const submitBtn = document.getElementById("submitStockBtn");
+    const selectedCount = document.getElementById("selectedProductCount");
+
+    let searchTimer = null;
+    let searchController = null;
+    let activeTargetRow = null;
+    let currentProducts = [];
+
+    function toNumber(value) {
+        const number = parseFloat(
+            String(value || "0").replace(",", ".")
+        );
+
+        return Number.isFinite(number) ? number : 0;
+    }
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function productInitial(name) {
+        const value = String(name || "").trim();
+
+        return value
+            ? value.charAt(0).toUpperCase()
+            : "P";
+    }
+
+    function getRows() {
+        return Array.from(
+            body.querySelectorAll(".stock-line-row")
+        );
+    }
+
+    function getProductId(row) {
+        return row
+            .querySelector(".product-id-input")
+            .value
+            .trim();
+    }
+
+    function getMovementType() {
+        return movementInput.value || "in";
+    }
+
+    function renderInitialSearchState() {
+        currentProducts = [];
+
+        searchStatus.textContent =
+            "Commencez à saisir un produit";
+
+        searchResults.innerHTML = `
+            <div class="stock-search-empty-state">
+                <div class="stock-search-state-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+
+                <strong>Recherchez vos produits</strong>
+
+                <span>
+                    Les produits trouvés apparaîtront ici et resteront visibles.
+                </span>
+            </div>
+        `;
+    }
+
+    function renderLoadingState() {
+        searchStatus.textContent =
+            "Recherche en cours...";
+
+        searchResults.innerHTML = `
+            <div class="stock-search-empty-state">
+                <div
+                    class="spinner-border text-primary"
+                    role="status"
+                ></div>
+
+                <strong>Recherche en cours</strong>
+
+                <span>
+                    Chargement des produits...
+                </span>
+            </div>
+        `;
+    }
+
+    function renderNoResultState() {
+        currentProducts = [];
+
+        searchStatus.textContent =
+            "Aucun produit trouvé";
+
+        searchResults.innerHTML = `
+            <div class="stock-search-empty-state">
+                <div class="stock-search-state-icon warning">
+                    <i class="bi bi-search"></i>
+                </div>
+
+                <strong>Aucun produit trouvé</strong>
+
+                <span>
+                    Vérifiez le nom, la référence ou le code-barres.
+                </span>
+            </div>
+        `;
+    }
+
+    function renderErrorState() {
+        currentProducts = [];
+
+        searchStatus.textContent =
+            "Erreur pendant la recherche";
+
+        searchResults.innerHTML = `
+            <div class="stock-search-empty-state">
+                <div class="stock-search-state-icon danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+
+                <strong>Impossible de charger les produits</strong>
+
+                <span>
+                    Réessayez la recherche.
+                </span>
+            </div>
+        `;
+    }
+
+    function findExistingProductRow(productId, excludedRow = null) {
+        return getRows().find(function (row) {
+            return (
+                row !== excludedRow
+                && getProductId(row) === String(productId)
+            );
+        }) || null;
+    }
+
+    function updateSelectedCount() {
+        const count = getRows().filter(function (row) {
+            return Boolean(getProductId(row));
+        }).length;
+
+        selectedCount.textContent =
+            count + (count > 1 ? " produits" : " produit");
+    }
+
+    function createEmptyRow() {
+        const clone = template.content.cloneNode(true);
+
+        body.appendChild(clone);
+
+        const rows = getRows();
+        const newRow = rows[rows.length - 1];
+
+        updateSelectedCount();
+
+        return newRow;
+    }
+
+    function resetRow(row) {
+        row.dataset.stock = "";
+
+        row.querySelector(".product-id-input").value = "";
+        row.querySelector(".product-label-hidden").value = "";
+        row.querySelector(".stock-quantity-input").value = "";
+
+        row.querySelector('input[name="reason"]').value = "";
+
+        row.querySelector(".selected-product-name").textContent =
+            "Ligne vide";
+
+        row.querySelector(".selected-product-meta").textContent =
+            "Cliquez sur « Choisir »";
+
+        row.querySelector(".stock-line-warning").textContent = "";
+
+        row
+            .querySelector(".stock-selected-product")
+            .classList.add("is-empty");
+
+        row.querySelector(".stock-selected-product-icon").innerHTML =
+            '<i class="bi bi-plus-lg"></i>';
+
+        row
+            .querySelector(".stock-quantity-input")
+            .classList.remove("is-invalid");
+
+        updateSelectedCount();
+    }
+
+    function highlightRow(row) {
+        row.classList.add("stock-row-highlight");
+
+        row.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+        window.setTimeout(function () {
+            row.classList.remove("stock-row-highlight");
+        }, 1800);
+    }
+
+    function validateRowStock(row) {
+        const quantityInput =
+            row.querySelector(".stock-quantity-input");
+
+        const warning =
+            row.querySelector(".stock-line-warning");
+
+        const productId =
+            getProductId(row);
+
+        const quantity =
+            toNumber(quantityInput.value);
+
+        const availableStock =
+            toNumber(row.dataset.stock);
+
+        quantityInput.classList.remove("is-invalid");
+        warning.textContent = "";
+
+        if (!productId) {
+            return true;
+        }
+
+        if (quantity <= 0) {
+            quantityInput.classList.add("is-invalid");
+
+            warning.textContent =
+                "La quantité doit être supérieure à zéro.";
+
+            return false;
+        }
+
+        if (
+            getMovementType() === "out"
+            && row.dataset.stock !== ""
+            && quantity > availableStock
+        ) {
+            quantityInput.classList.add("is-invalid");
+
+            warning.textContent =
+                "Stock insuffisant. Disponible : "
+                + availableStock;
+
+            return false;
+        }
+
+        return true;
+    }
+
+    function validateAllStocks() {
+        getRows().forEach(function (row) {
+            if (getProductId(row)) {
+                validateRowStock(row);
+            }
+        });
+    }
+
+    function fillRowWithProduct(row, product) {
+        const duplicateRow =
+            findExistingProductRow(product.id, row);
+
+        if (duplicateRow) {
+            searchStatus.textContent =
+                "Ce produit est déjà présent dans la liste.";
+
+            activeTargetRow = null;
+
+            highlightRow(duplicateRow);
+
+            const quantityInput =
+                duplicateRow.querySelector(".stock-quantity-input");
+
+            quantityInput.focus();
+            quantityInput.select();
+
+            return;
+        }
+
+        row.dataset.stock = product.stock;
+
+        row.querySelector(".product-id-input").value =
+            product.id;
+
+        row.querySelector(".product-label-hidden").value =
+            product.label;
+
+        row.querySelector(".selected-product-name").textContent =
+            product.name;
+
+        row.querySelector(".selected-product-meta").textContent =
+            "Réf : "
+            + (product.reference || "-")
+            + " • Stock actuel : "
+            + product.stock
+            + " "
+            + product.unit;
+
+        row.querySelector(".stock-line-warning").textContent = "";
+
+        const productBox =
+            row.querySelector(".stock-selected-product");
+
+        productBox.classList.remove("is-empty");
+
+        row.querySelector(".stock-selected-product-icon").textContent =
+            productInitial(product.name);
+
+        const quantityInput =
+            row.querySelector(".stock-quantity-input");
+
+        if (toNumber(quantityInput.value) <= 0) {
+            quantityInput.value = "1";
+        }
+
+        activeTargetRow = null;
+
+        updateSelectedCount();
+        validateRowStock(row);
+        highlightRow(row);
+
+        quantityInput.focus();
+        quantityInput.select();
+
+        searchStatus.textContent =
+            product.name + " ajouté. Vous pouvez ajouter un autre produit.";
+    }
+
+    function addProduct(product) {
+        let targetRow = activeTargetRow;
+
+        if (
+            targetRow
+            && !document.body.contains(targetRow)
+        ) {
+            targetRow = null;
+        }
+
+        if (!targetRow) {
+            const existingRow =
+                findExistingProductRow(product.id);
+
+            if (existingRow) {
+                searchStatus.textContent =
+                    "Ce produit est déjà présent dans la liste.";
+
+                highlightRow(existingRow);
+
+                const quantityInput =
+                    existingRow.querySelector(".stock-quantity-input");
+
+                quantityInput.focus();
+                quantityInput.select();
+
+                return;
+            }
+
+            targetRow = getRows().find(function (row) {
+                return !getProductId(row);
+            });
+
+            if (!targetRow) {
+                targetRow = createEmptyRow();
+            }
+        }
+
+        fillRowWithProduct(targetRow, product);
+    }
+
+    function createProductCard(product) {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "stock-product-card";
+
+        button.innerHTML = `
+            <div class="stock-product-card-header">
+
+                <div class="stock-product-card-avatar">
+                    ${escapeHtml(productInitial(product.name))}
+                </div>
+
+                <div class="stock-product-card-title">
+                    <strong>
+                        ${escapeHtml(product.name)}
+                    </strong>
+
+                    <span>
+                        Réf : ${escapeHtml(product.reference || "-")}
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="stock-product-card-data">
+
+                <div>
+                    <span>Stock actuel</span>
+
+                    <strong>
+                        ${escapeHtml(product.stock)}
+                        ${escapeHtml(product.unit)}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Action</span>
+
+                    <strong class="stock-card-add-text">
+                        <i class="bi bi-plus-circle"></i>
+                        Ajouter
+                    </strong>
+                </div>
+
+            </div>
+        `;
+
+        button.addEventListener("click", function () {
+            addProduct(product);
+        });
+
+        return button;
+    }
+
+    function renderProducts(products) {
+        currentProducts = products;
+        searchResults.innerHTML = "";
+
+        if (!products.length) {
+            renderNoResultState();
+            return;
+        }
+
+        searchStatus.textContent =
+            products.length
+            + (products.length > 1
+                ? " produits trouvés"
+                : " produit trouvé");
+
+        const grid = document.createElement("div");
+        grid.className = "stock-product-grid";
+
+        products.forEach(function (product) {
+            grid.appendChild(
+                createProductCard(product)
+            );
+        });
+
+        searchResults.appendChild(grid);
+    }
+
+    function searchProducts(query) {
+        if (searchController) {
+            searchController.abort();
+        }
+
+        searchController = new AbortController();
+
+        renderLoadingState();
+
+        fetch(
+            searchUrl + "?q=" + encodeURIComponent(query),
+            {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                signal: searchController.signal
+            }
+        )
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("Erreur HTTP");
+                }
+
+                return response.json();
+            })
+            .then(function (data) {
+                renderProducts(data.results || []);
+            })
+            .catch(function (error) {
+                if (error.name === "AbortError") {
+                    return;
+                }
+
+                renderErrorState();
+            });
+    }
+
+    function clearSearch() {
+        clearTimeout(searchTimer);
+
+        if (searchController) {
+            searchController.abort();
+        }
+
+        searchInput.value = "";
+        activeTargetRow = null;
+
+        renderInitialSearchState();
+        searchInput.focus();
+    }
+
+    function focusSearch(row = null) {
+        activeTargetRow = row;
+
+        searchPanel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+        window.setTimeout(function () {
+            searchInput.focus();
+            searchInput.select();
+        }, 300);
+
+        if (row) {
+            searchStatus.textContent =
+                "Choisissez le produit pour la ligne sélectionnée.";
+        }
+    }
+
+    function refreshMode(type) {
+        movementInput.value = type;
+
+        switchButtons.forEach(function (button) {
+            button.classList.remove("active", "danger");
+
+            if (button.dataset.type === type) {
+                button.classList.add("active");
+
+                if (type === "out") {
+                    button.classList.add("danger");
+                }
+            }
+        });
+
+        if (type === "out") {
+            submitBtn.classList.remove("btn-primary-premium");
+            submitBtn.classList.add("btn-danger-premium");
+
+            submitBtn.innerHTML =
+                '<i class="bi bi-check-circle"></i> Valider la sortie';
+        } else {
+            submitBtn.classList.remove("btn-danger-premium");
+            submitBtn.classList.add("btn-primary-premium");
+
+            submitBtn.innerHTML =
+                '<i class="bi bi-check-circle"></i> Valider l’entrée';
+        }
+
+        validateAllStocks();
+    }
+
+    searchInput.addEventListener("input", function () {
+        const query = searchInput.value.trim();
+
+        clearTimeout(searchTimer);
+
+        if (!query) {
+            renderInitialSearchState();
+            return;
+        }
+
+        searchTimer = window.setTimeout(function () {
+            searchProducts(query);
+        }, 220);
+    });
+
+    searchInput.addEventListener("keydown", function (event) {
+        if (
+            event.key === "Enter"
+            && currentProducts.length === 1
+        ) {
+            event.preventDefault();
+            addProduct(currentProducts[0]);
+        }
+
+        if (event.key === "Escape") {
+            clearSearch();
+        }
+    });
+
+    clearSearchBtn.addEventListener(
+        "click",
+        clearSearch
+    );
+
+    focusSearchBtn.addEventListener("click", function () {
+        focusSearch();
+    });
+
+    addLineBtn.addEventListener("click", function () {
+        const newRow = createEmptyRow();
+        focusSearch(newRow);
+    });
+
+    switchButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            refreshMode(button.dataset.type);
+        });
+    });
+
+    body.addEventListener("click", function (event) {
+        const chooseButton =
+            event.target.closest(".choose-stock-product-btn");
+
+        if (chooseButton) {
+            const row =
+                chooseButton.closest(".stock-line-row");
+
+            focusSearch(row);
+            return;
+        }
+
+        const removeButton =
+            event.target.closest(".remove-line-btn");
+
+        if (!removeButton) {
+            return;
+        }
+
+        const row =
+            removeButton.closest(".stock-line-row");
+
+        if (getRows().length === 1) {
+            resetRow(row);
+        } else {
+            row.remove();
+            updateSelectedCount();
+        }
+    });
+
+    body.addEventListener("input", function (event) {
+        if (
+            event.target.classList.contains(
+                "stock-quantity-input"
+            )
+        ) {
+            const row =
+                event.target.closest(".stock-line-row");
+
+            validateRowStock(row);
+        }
+    });
+
+    form.addEventListener("submit", function (event) {
+        const rows = getRows();
+
+        let validLineCount = 0;
+        let hasError = false;
+
+        const usedProducts = new Set();
+
+        rows.forEach(function (row) {
+            const productId =
+                getProductId(row);
+
+            const quantityInput =
+                row.querySelector(".stock-quantity-input");
+
+            const quantity =
+                toNumber(quantityInput.value);
+
+            if (!productId) {
+                if (quantity > 0) {
+                    quantityInput.classList.add("is-invalid");
+                    hasError = true;
+                }
+
+                return;
+            }
+
+            validLineCount += 1;
+
+            if (usedProducts.has(productId)) {
+                hasError = true;
+                row.classList.add("stock-row-highlight");
+            } else {
+                usedProducts.add(productId);
+            }
+
+            if (!validateRowStock(row)) {
+                hasError = true;
+            }
+        });
+
+        if (validLineCount === 0) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            alert(
+                "Ajoutez au moins un produit avec une quantité."
+            );
+
+            focusSearch();
+            return;
+        }
+
+        if (hasError) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            alert(
+                "Corrigez les lignes invalides avant de continuer."
+            );
+
+            const firstInvalid =
+                form.querySelector(".is-invalid");
+
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                firstInvalid.focus();
+            }
+
+            return;
+        }
+
+        event.stopImmediatePropagation();
+
+        submitBtn.disabled = true;
+
+        submitBtn.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm"
+                aria-hidden="true"
+            ></span>
+            Enregistrement...
+        `;
+    });
+
+    refreshMode(movementInput.value || "in");
+    updateSelectedCount();
+});
+</script>
+
+{% endblock %}

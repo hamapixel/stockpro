@@ -1,0 +1,604 @@
+{% load static money_filters role_tags %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% block title %}Stock Single{% endblock %}
+    </title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <link
+        href="{% static 'css/app.css' %}"
+        rel="stylesheet"
+    >
+</head>
+
+<body>
+
+{% with current_url=request.resolver_match.url_name is_admin=request.user|is_admin_role is_seller=request.user|is_seller_role %}
+
+<div class="app-shell">
+
+    <!-- =====================================================
+         MENU ORDINATEUR
+    ====================================================== -->
+
+    <aside class="sidebar d-none d-lg-flex flex-column">
+
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+
+            <div class="sidebar-brand-text">
+                <h5>Stock Single</h5>
+                <span>Gestion premium</span>
+            </div>
+        </div>
+
+        <nav
+            class="sidebar-nav"
+            data-preserve-scroll
+            data-scroll-key="desktop-sidebar-position"
+        >
+
+            <div class="sidebar-section-title">
+                Général
+            </div>
+
+            <a
+                href="{% url 'dashboard' %}"
+                class="nav-link {% if current_url == 'dashboard' %}active{% endif %}"
+            >
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Tableau de bord</span>
+            </a>
+
+            {% if is_admin or is_seller %}
+
+                <div class="sidebar-section-title">
+                    Ventes
+                </div>
+
+                <a
+                    href="{% url 'sale_pos' %}"
+                    class="nav-link {% if current_url == 'sale_pos' %}active{% endif %}"
+                >
+                    <i class="bi bi-cart-check-fill"></i>
+                    <span>POS / Vente</span>
+                </a>
+
+                <a
+                    href="{% url 'sale_list' %}"
+                    class="nav-link {% if current_url == 'sale_list' or current_url == 'sale_detail' %}active{% endif %}"
+                >
+                    <i class="bi bi-receipt"></i>
+                    <span>Ventes</span>
+                </a>
+
+                <a
+                    href="{% url 'client_list' %}"
+                    class="nav-link {% if current_url == 'client_list' or current_url == 'client_create' or current_url == 'client_detail' or current_url == 'client_update' %}active{% endif %}"
+                >
+                    <i class="bi bi-people-fill"></i>
+                    <span>Clients</span>
+                </a>
+
+                <a
+                    href="{% url 'credit_list' %}"
+                    class="nav-link {% if current_url == 'credit_list' %}active{% endif %}"
+                >
+                    <i class="bi bi-wallet2"></i>
+                    <span>Crédits</span>
+                </a>
+
+                <a
+                    href="{% url 'payment_list' %}"
+                    class="nav-link {% if current_url == 'payment_list' or current_url == 'payment_create' %}active{% endif %}"
+                >
+                    <i class="bi bi-cash-coin"></i>
+                    <span>Paiements</span>
+                </a>
+
+                <a
+                    href="{% url 'document_center' %}"
+                    class="nav-link {% if current_url == 'document_center' or current_url == 'sale_invoice' or current_url == 'sale_receipt' or current_url == 'payment_receipt' %}active{% endif %}"
+                >
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    <span>Documents</span>
+                </a>
+
+            {% endif %}
+
+            {% if is_admin %}
+
+                <div class="sidebar-section-title">
+                    Catalogue
+                </div>
+
+                <a
+                    href="{% url 'product_list' %}"
+                    class="nav-link {% if current_url == 'product_list' or current_url == 'product_create' or current_url == 'product_detail' or current_url == 'product_update' or current_url == 'product_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-box2-heart-fill"></i>
+                    <span>Produits</span>
+                </a>
+
+                <a
+                    href="{% url 'category_list' %}"
+                    class="nav-link {% if current_url == 'category_list' or current_url == 'category_create' or current_url == 'category_update' or current_url == 'category_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-tags-fill"></i>
+                    <span>Catégories</span>
+                </a>
+
+                <a
+                    href="{% url 'unit_list' %}"
+                    class="nav-link {% if current_url == 'unit_list' or current_url == 'unit_create' or current_url == 'unit_update' or current_url == 'unit_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-rulers"></i>
+                    <span>Unités</span>
+                </a>
+
+                <div class="sidebar-section-title">
+                    Stock et finances
+                </div>
+
+                <a
+                    href="{% url 'stock_list' %}"
+                    class="nav-link {% if current_url == 'stock_list' or current_url == 'stock_adjustment_create' or current_url == 'stock_in_create' or current_url == 'stock_out_create' or current_url == 'stock_movement_list' %}active{% endif %}"
+                >
+                    <i class="bi bi-stack"></i>
+                    <span>Stock</span>
+                </a>
+
+                <a
+                    href="{% url 'expense_list' %}"
+                    class="nav-link {% if current_url == 'expense_list' or current_url == 'expense_create' or current_url == 'expense_update' or current_url == 'expense_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-graph-down-arrow"></i>
+                    <span>Dépenses</span>
+                </a>
+
+                <a
+                    href="{% url 'cashbox_today' %}"
+                    class="nav-link {% if current_url == 'cashbox_today' %}active{% endif %}"
+                >
+                    <i class="bi bi-safe-fill"></i>
+                    <span>Caisse</span>
+                </a>
+
+                <a
+                    href="{% url 'report_dashboard' %}"
+                    class="nav-link {% if current_url == 'report_dashboard' or current_url == 'sales_report' or current_url == 'stock_report' or current_url == 'profit_report' %}active{% endif %}"
+                >
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>Rapports</span>
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            <div class="sidebar-user-info">
+
+                <div class="sidebar-user-avatar">
+                    {% if is_admin %}
+                        A
+                    {% elif is_seller %}
+                        V
+                    {% else %}
+                        U
+                    {% endif %}
+                </div>
+
+                <div class="sidebar-user-text">
+                    <strong>{{ request.user.username }}</strong>
+
+                    <small>
+                        {% if is_admin %}
+                            Administrateur
+                        {% elif is_seller %}
+                            Vendeur
+                        {% else %}
+                            Utilisateur
+                        {% endif %}
+                    </small>
+                </div>
+
+            </div>
+
+            <form
+                method="post"
+                action="{% url 'logout' %}"
+                class="mt-3"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="btn btn-logout w-100"
+                >
+                    <i class="bi bi-box-arrow-left"></i>
+                    Déconnexion
+                </button>
+            </form>
+
+        </div>
+
+    </aside>
+
+    <!-- =====================================================
+         CONTENU PRINCIPAL
+    ====================================================== -->
+
+    <div class="main-zone">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-2">
+
+                <button
+                    class="btn mobile-menu-btn d-lg-none"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileMenu"
+                    aria-controls="mobileMenu"
+                    aria-label="Ouvrir le menu"
+                >
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <div class="topbar-welcome">
+                    <h6 class="mb-0">
+                        Bonjour, {{ request.user.username }}
+                    </h6>
+
+                    <small class="text-muted">
+                        {% if is_admin %}
+                            Espace Administrateur
+                        {% elif is_seller %}
+                            Espace Vendeur
+                        {% else %}
+                            Utilisateur sans rôle
+                        {% endif %}
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="topbar-actions">
+
+                <form
+                    method="post"
+                    action="{% url 'logout' %}"
+                    class="d-none d-md-inline-block"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="btn btn-top-logout"
+                    >
+                        <i class="bi bi-box-arrow-left"></i>
+                        Déconnexion
+                    </button>
+                </form>
+
+                <div
+                    class="user-avatar"
+                    title="{% if is_admin %}Administrateur{% elif is_seller %}Vendeur{% else %}Utilisateur{% endif %}"
+                >
+                    {% if is_admin %}
+                        A
+                    {% elif is_seller %}
+                        V
+                    {% else %}
+                        U
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </header>
+
+        <main class="content-area">
+
+           <main class="content-area">
+
+    {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+                <div
+                    class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Fermer"
+                    ></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+</main>
+
+        </main>
+
+    </div>
+
+</div>
+
+<!-- =====================================================
+     MENU MOBILE
+====================================================== -->
+
+<div
+    class="offcanvas offcanvas-start mobile-offcanvas"
+    tabindex="-1"
+    id="mobileMenu"
+    aria-labelledby="mobileMenuLabel"
+>
+
+    <div class="offcanvas-header">
+
+        <div
+            class="sidebar-brand mobile-brand"
+            id="mobileMenuLabel"
+        >
+            <div class="brand-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+
+            <div class="sidebar-brand-text">
+                <h5>Stock Single</h5>
+
+                <span>
+                    {% if is_admin %}
+                        Administrateur
+                    {% elif is_seller %}
+                        Vendeur
+                    {% else %}
+                        Utilisateur
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="offcanvas"
+            aria-label="Fermer"
+        ></button>
+
+    </div>
+
+    <div class="offcanvas-body">
+
+        <div class="mobile-user-card">
+
+            <div class="sidebar-user-avatar">
+                {% if is_admin %}
+                    A
+                {% elif is_seller %}
+                    V
+                {% else %}
+                    U
+                {% endif %}
+            </div>
+
+            <div class="sidebar-user-text">
+                <strong>{{ request.user.username }}</strong>
+
+                <small>
+                    {% if is_admin %}
+                        Administrateur
+                    {% elif is_seller %}
+                        Vendeur
+                    {% else %}
+                        Utilisateur
+                    {% endif %}
+                </small>
+            </div>
+
+        </div>
+
+        <nav
+            class="sidebar-nav"
+            data-preserve-scroll
+            data-scroll-key="mobile-sidebar-position"
+        >
+
+            <div class="sidebar-section-title">
+                Général
+            </div>
+
+            <a
+                href="{% url 'dashboard' %}"
+                class="nav-link {% if current_url == 'dashboard' %}active{% endif %}"
+            >
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Tableau de bord</span>
+            </a>
+
+            {% if is_admin or is_seller %}
+
+                <div class="sidebar-section-title">
+                    Ventes
+                </div>
+
+                <a
+                    href="{% url 'sale_pos' %}"
+                    class="nav-link {% if current_url == 'sale_pos' %}active{% endif %}"
+                >
+                    <i class="bi bi-cart-check-fill"></i>
+                    <span>POS / Vente</span>
+                </a>
+
+                <a
+                    href="{% url 'sale_list' %}"
+                    class="nav-link {% if current_url == 'sale_list' or current_url == 'sale_detail' %}active{% endif %}"
+                >
+                    <i class="bi bi-receipt"></i>
+                    <span>Ventes</span>
+                </a>
+
+                <a
+                    href="{% url 'client_list' %}"
+                    class="nav-link {% if current_url == 'client_list' or current_url == 'client_create' or current_url == 'client_detail' or current_url == 'client_update' %}active{% endif %}"
+                >
+                    <i class="bi bi-people-fill"></i>
+                    <span>Clients</span>
+                </a>
+
+                <a
+                    href="{% url 'credit_list' %}"
+                    class="nav-link {% if current_url == 'credit_list' %}active{% endif %}"
+                >
+                    <i class="bi bi-wallet2"></i>
+                    <span>Crédits</span>
+                </a>
+
+                <a
+                    href="{% url 'payment_list' %}"
+                    class="nav-link {% if current_url == 'payment_list' or current_url == 'payment_create' %}active{% endif %}"
+                >
+                    <i class="bi bi-cash-coin"></i>
+                    <span>Paiements</span>
+                </a>
+
+                <a
+                    href="{% url 'document_center' %}"
+                    class="nav-link {% if current_url == 'document_center' or current_url == 'sale_invoice' or current_url == 'sale_receipt' or current_url == 'payment_receipt' %}active{% endif %}"
+                >
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    <span>Documents</span>
+                </a>
+
+            {% endif %}
+
+            {% if is_admin %}
+
+                <div class="sidebar-section-title">
+                    Catalogue
+                </div>
+
+                <a
+                    href="{% url 'product_list' %}"
+                    class="nav-link {% if current_url == 'product_list' or current_url == 'product_create' or current_url == 'product_detail' or current_url == 'product_update' or current_url == 'product_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-box2-heart-fill"></i>
+                    <span>Produits</span>
+                </a>
+
+                <a
+                    href="{% url 'category_list' %}"
+                    class="nav-link {% if current_url == 'category_list' or current_url == 'category_create' or current_url == 'category_update' or current_url == 'category_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-tags-fill"></i>
+                    <span>Catégories</span>
+                </a>
+
+                <a
+                    href="{% url 'unit_list' %}"
+                    class="nav-link {% if current_url == 'unit_list' or current_url == 'unit_create' or current_url == 'unit_update' or current_url == 'unit_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-rulers"></i>
+                    <span>Unités</span>
+                </a>
+
+                <div class="sidebar-section-title">
+                    Stock et finances
+                </div>
+
+                <a
+                    href="{% url 'stock_list' %}"
+                    class="nav-link {% if current_url == 'stock_list' or current_url == 'stock_adjustment_create' or current_url == 'stock_in_create' or current_url == 'stock_out_create' or current_url == 'stock_movement_list' %}active{% endif %}"
+                >
+                    <i class="bi bi-stack"></i>
+                    <span>Stock</span>
+                </a>
+
+                <a
+                    href="{% url 'expense_list' %}"
+                    class="nav-link {% if current_url == 'expense_list' or current_url == 'expense_create' or current_url == 'expense_update' or current_url == 'expense_delete' %}active{% endif %}"
+                >
+                    <i class="bi bi-graph-down-arrow"></i>
+                    <span>Dépenses</span>
+                </a>
+
+                <a
+                    href="{% url 'cashbox_today' %}"
+                    class="nav-link {% if current_url == 'cashbox_today' %}active{% endif %}"
+                >
+                    <i class="bi bi-safe-fill"></i>
+                    <span>Caisse</span>
+                </a>
+
+                <a
+                    href="{% url 'report_dashboard' %}"
+                    class="nav-link {% if current_url == 'report_dashboard' or current_url == 'sales_report' or current_url == 'stock_report' or current_url == 'profit_report' %}active{% endif %}"
+                >
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>Rapports</span>
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+        <form
+            method="post"
+            action="{% url 'logout' %}"
+            class="mobile-logout-form"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="btn btn-logout w-100"
+            >
+                <i class="bi bi-box-arrow-left"></i>
+                Déconnexion
+            </button>
+        </form>
+
+    </div>
+
+</div>
+
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+
+
+</body>
+</html>

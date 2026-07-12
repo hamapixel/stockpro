@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Entrée de stock{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Entrée de stock</h3>
+        <p>Ajoutez une quantité au stock d’un produit.</p>
+    </div>
+
+    <a href="{% url 'stock_list' %}" class="btn btn-light-premium">
+        <i class="bi bi-arrow-left"></i>
+        Retour
+    </a>
+</div>
+
+<div class="premium-panel">
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-12 col-lg-6">
+            <label class="form-label">Produit</label>
+            {{ form.product }}
+            {{ form.product.errors }}
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <label class="form-label">Quantité à ajouter</label>
+            {{ form.quantity }}
+            {{ form.quantity.errors }}
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Note / motif</label>
+            {{ form.reason }}
+            {{ form.reason.errors }}
+        </div>
+
+        <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary-premium">
+                <i class="bi bi-check-circle"></i>
+                Enregistrer l’entrée
+            </button>
+
+            <a href="{% url 'stock_list' %}" class="btn btn-light-premium">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

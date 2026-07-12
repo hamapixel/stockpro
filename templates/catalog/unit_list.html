@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Unités{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Unités</h3>
+        <p>Gérez les unités comme pièce, carton, paquet, sac.</p>
+    </div>
+
+    <a href="{% url 'unit_create' %}" class="btn btn-primary-premium">
+        <i class="bi bi-plus-circle"></i>
+        Ajouter
+    </a>
+</div>
+
+<div class="premium-panel">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-12 col-md-10">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Rechercher une unité...">
+        </div>
+
+        <div class="col-12 col-md-2">
+            <button class="btn btn-light-premium w-100" type="submit">
+                <i class="bi bi-search"></i>
+                Chercher
+            </button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table premium-table align-middle">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Abréviation</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for unit in page_obj %}
+                    <tr>
+                        <td><strong>{{ unit.name }}</strong></td>
+                        <td>{{ unit.short_name }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'unit_update' unit.pk %}" class="btn btn-sm btn-light-premium">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a href="{% url 'unit_delete' unit.pk %}" class="btn btn-sm btn-danger-premium">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            Aucune unité trouvée.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

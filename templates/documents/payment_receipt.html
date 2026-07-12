@@ -1,0 +1,243 @@
+{% load money_filters %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Reçu paiement {{ sale.sale_number }}</title>
+
+    <style>
+        @page {
+            size: A5;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #111827;
+            margin: 0;
+            background: #f3f4f6;
+            font-size: 13px;
+        }
+
+        .print-actions {
+            max-width: 148mm;
+            margin: 14px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .print-actions button,
+        .print-actions a {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            color: #111827;
+            background: #fff;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        }
+
+        .print-actions button {
+            background: #16a34a;
+            color: #fff;
+        }
+
+        .receipt {
+            width: 148mm;
+            min-height: 210mm;
+            margin: 0 auto 20px;
+            background: #fff;
+            padding: 14mm;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #16a34a;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #16a34a;
+            font-size: 25px;
+        }
+
+        .header h2 {
+            margin: 8px 0 0;
+            font-size: 21px;
+            text-transform: uppercase;
+        }
+
+        .amount {
+            text-align: center;
+            background: #ecfdf5;
+            border: 2px solid #16a34a;
+            border-radius: 16px;
+            padding: 18px;
+            margin: 18px 0;
+        }
+
+        .amount span {
+            display: block;
+            color: #166534;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .amount strong {
+            display: block;
+            color: #16a34a;
+            font-size: 30px;
+            font-weight: 900;
+        }
+
+        .line {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 0;
+        }
+
+        .line span {
+            color: #6b7280;
+            font-weight: 700;
+        }
+
+        .line strong {
+            text-align: right;
+        }
+
+        .footer {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .signature {
+            width: 45%;
+            text-align: center;
+            padding-top: 35px;
+            border-top: 1px solid #111827;
+            font-weight: 700;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .receipt {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="print-actions">
+    <a href="{% url 'payment_list' %}">Retour</a>
+    <button onclick="window.print()">Imprimer</button>
+</div>
+
+<div class="receipt">
+    <div class="header">
+        <h1>STOCK SINGLE</h1>
+        <p>Bamako, Mali — Tél : 00 00 00 00</p>
+        <h2>Reçu de paiement</h2>
+    </div>
+
+    <div class="amount">
+        <span>Montant reçu</span>
+        <strong>{{ payment.amount|fcfa }}</strong>
+    </div>
+
+    <div class="line">
+        <span>N° Vente</span>
+        <strong>{{ sale.sale_number }}</strong>
+    </div>
+
+    <div class="line">
+        <span>Date paiement</span>
+        <strong>{{ payment.payment_date|date:"d/m/Y H:i" }}</strong>
+    </div>
+
+    <div class="line">
+        <span>Client</span>
+        <strong>
+            {% if payment.client %}
+                {{ payment.client.full_name }}
+            {% elif sale.client %}
+                {{ sale.client.full_name }}
+            {% else %}
+                Client comptoir
+            {% endif %}
+        </strong>
+    </div>
+
+    <div class="line">
+        <span>Mode paiement</span>
+        <strong>{{ payment.get_payment_method_display }}</strong>
+    </div>
+
+    <div class="line">
+        <span>Total vente</span>
+        <strong>{{ sale.total|fcfa }}</strong>
+    </div>
+
+    <div class="line">
+        <span>Total payé</span>
+        <strong>{{ sale.amount_paid|fcfa }}</strong>
+    </div>
+
+    <div class="line">
+        <span>Reste à payer</span>
+        <strong>{{ sale.remaining_amount|fcfa }}</strong>
+    </div>
+
+    <div class="line">
+        <span>Reçu par</span>
+        <strong>
+            {% if payment.created_by %}
+                {{ payment.created_by.username }}
+            {% else %}
+                -
+            {% endif %}
+        </strong>
+    </div>
+
+    {% if payment.notes %}
+        <div class="line">
+            <span>Note</span>
+            <strong>{{ payment.notes }}</strong>
+        </div>
+    {% endif %}
+
+    <div class="footer">
+        <div class="signature">Client</div>
+        <div class="signature">Caissier</div>
+    </div>
+</div>
+
+</body>
+</html>

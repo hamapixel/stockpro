@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer produit{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Supprimer produit</h3>
+        <p>Cette action est définitive.</p>
+    </div>
+
+    <a href="{% url 'product_list' %}" class="btn btn-light-premium">
+        <i class="bi bi-arrow-left"></i>
+        Retour
+    </a>
+</div>
+
+<div class="premium-panel">
+    <div class="delete-box">
+        <i class="bi bi-exclamation-triangle"></i>
+        <h4>Confirmer la suppression</h4>
+        <p>Voulez-vous vraiment supprimer le produit <strong>{{ product.name }}</strong> ?</p>
+
+        <form method="post" class="d-flex gap-2 justify-content-center flex-wrap">
+            {% csrf_token %}
+
+            <button type="submit" class="btn btn-danger-premium">
+                Oui, supprimer
+            </button>
+
+            <a href="{% url 'product_list' %}" class="btn btn-light-premium">
+                Annuler
+            </a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

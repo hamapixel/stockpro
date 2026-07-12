@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Rapports{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Rapports</h3>
+        <p>Vue globale des ventes, stock, crédits et bénéfices estimés.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'sales_report' %}" class="btn btn-primary-premium">
+            <i class="bi bi-bar-chart"></i>
+            Ventes
+        </a>
+
+        <a href="{% url 'stock_report' %}" class="btn btn-light-premium">
+            <i class="bi bi-box-seam"></i>
+            Stock
+        </a>
+
+        <a href="{% url 'profit_report' %}" class="btn btn-light-premium">
+            <i class="bi bi-graph-up-arrow"></i>
+            Bénéfices
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4 report-large-cards">
+    <div class="col-12 col-lg-4">
+        <div class="stat-card stat-green">
+            <div class="stat-icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Ventes aujourd’hui</span>
+                <h4>{{ today_total|fcfa }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon">
+                <i class="bi bi-calendar-month"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Ventes ce mois</span>
+                <h4>{{ month_total|fcfa }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="stat-card stat-purple">
+            <div class="stat-icon">
+                <i class="bi bi-calendar2-range"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Ventes cette année</span>
+                <h4>{{ year_total|fcfa }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4 report-large-cards">
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-green">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Payé aujourd’hui</span>
+                <strong>{{ today_paid|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-red">
+                <i class="bi bi-credit-card-2-back"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Crédit aujourd’hui</span>
+                <strong>{{ today_credit|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-orange">
+                <i class="bi bi-graph-down-arrow"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Dépenses aujourd’hui</span>
+                <strong>{{ today_expenses|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-blue">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Valeur stock achat</span>
+                <strong>{{ stock_purchase_value|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-green">
+                <i class="bi bi-tags"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Valeur stock vente</span>
+                <strong>{{ stock_sale_value|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-purple">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Marge potentielle stock</span>
+                <strong>{{ stock_margin_value|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-4">
+        <a href="{% url 'sales_report' %}" class="report-link-card">
+            <i class="bi bi-bar-chart-fill"></i>
+            <div>
+                <h5>Rapport ventes</h5>
+                <p>Filtrer les ventes par période, statut et exporter en CSV.</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <a href="{% url 'stock_report' %}" class="report-link-card">
+            <i class="bi bi-box-seam-fill"></i>
+            <div>
+                <h5>Rapport stock</h5>
+                <p>Voir stock faible, stock zéro, valeur achat et valeur vente.</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <a href="{% url 'profit_report' %}" class="report-link-card">
+            <i class="bi bi-graph-up-arrow"></i>
+            <div>
+                <h5>Bénéfices estimés</h5>
+                <p>Calcul du bénéfice selon prix d’achat, ventes et dépenses.</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+{% endblock %}

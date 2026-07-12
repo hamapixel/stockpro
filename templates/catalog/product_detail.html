@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Détail produit{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Détail produit</h3>
+        <p>Informations complètes sur l’article.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'product_update' product.pk %}" class="btn btn-primary-premium">
+            <i class="bi bi-pencil"></i>
+            Modifier
+        </a>
+
+        <a href="{% url 'product_list' %}" class="btn btn-light-premium">
+            <i class="bi bi-arrow-left"></i>
+            Retour
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-4">
+        <div class="premium-panel h-100">
+            <div class="product-detail-image">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}
+                    <div class="product-placeholder big">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+        <div class="premium-panel h-100">
+            <h4 class="fw-bold">{{ product.name }}</h4>
+
+            <div class="row g-3 mt-2">
+                <div class="col-12 col-md-6">
+                    <div class="summary-box">
+                        <span>Prix de vente</span>
+                        <strong>{{ product.sale_price|fcfa }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="summary-box">
+                        <span>Prix d’achat</span>
+                        <strong>{{ product.purchase_price|fcfa }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="summary-box">
+                        <span>Stock actuel</span>
+                        <strong>{{ product.stock_quantity }} {{ product.unit.short_name }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="summary-box">
+                        <span>Stock minimum</span>
+                        <strong>{{ product.alert_quantity }} {{ product.unit.short_name }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-list mt-3">
+                <div class="quick-row">
+                    <span>Catégorie</span>
+                    <strong>{{ product.category.name|default:"-" }}</strong>
+                </div>
+
+                <div class="quick-row">
+                    <span>Référence</span>
+                    <strong>{{ product.reference|default:"-" }}</strong>
+                </div>
+
+                <div class="quick-row">
+                    <span>Code-barres</span>
+                    <strong>{{ product.barcode|default:"-" }}</strong>
+                </div>
+
+                <div class="quick-row">
+                    <span>Statut</span>
+                    {% if product.is_active %}
+                        <strong>Actif</strong>
+                    {% else %}
+                        <strong>Inactif</strong>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if product.description %}
+                <div class="mt-3">
+                    <h6 class="fw-bold">Description</h6>
+                    <p class="text-muted mb-0">{{ product.description }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

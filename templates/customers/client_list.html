@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Clients{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Clients</h3>
+        <p>Gérez vos clients, leurs achats et leurs crédits.</p>
+    </div>
+
+    <a href="{% url 'client_create' %}" class="btn btn-primary-premium">
+        <i class="bi bi-person-plus"></i>
+        Ajouter client
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-blue">
+                <i class="bi bi-people"></i>
+            </div>
+            <div>
+                <span>Total clients</span>
+                <strong>{{ total_clients }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-orange">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <div>
+                <span>Clients à crédit</span>
+                <strong>{{ credit_clients }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-red">
+                <i class="bi bi-credit-card-2-back"></i>
+            </div>
+            <div>
+                <span>Dette totale</span>
+                <strong>{{ total_debt|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="premium-panel mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-12 col-lg-6">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Rechercher client, téléphone, adresse...">
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <select name="credit" class="form-select">
+                <option value="">Tous les clients</option>
+                <option value="with_credit" {% if credit_filter == "with_credit" %}selected{% endif %}>Avec crédit</option>
+                <option value="without_credit" {% if credit_filter == "without_credit" %}selected{% endif %}>Sans crédit</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <button type="submit" class="btn btn-light-premium w-100">
+                <i class="bi bi-search"></i>
+                Chercher
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="premium-panel">
+    <div class="table-responsive">
+        <table class="table premium-table align-middle">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Téléphone</th>
+                    <th>Adresse</th>
+                    <th>Dette</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for client in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ client.full_name }}</strong>
+                            {% if client.email %}
+                                <br>
+                                <small class="text-muted">{{ client.email }}</small>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ client.phone|default:"-" }}</td>
+                        <td>{{ client.address|default:"-" }}</td>
+
+                        <td>
+                            <strong>{{ client.balance|fcfa }}</strong>
+                        </td>
+
+                        <td>
+                            {% if client.balance > 0 %}
+                                <span class="badge badge-credit">Crédit</span>
+                            {% else %}
+                                <span class="badge badge-paid">OK</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="{% url 'client_detail' client.pk %}" class="btn btn-sm btn-light-premium">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <a href="{% url 'client_update' client.pk %}" class="btn btn-sm btn-light-premium">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a href="{% url 'client_delete' client.pk %}" class="btn btn-sm btn-danger-premium">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Aucun client trouvé.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

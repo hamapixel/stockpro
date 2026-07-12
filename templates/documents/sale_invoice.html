@@ -1,0 +1,329 @@
+{% load money_filters %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Facture {{ sale.sale_number }}</title>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #111827;
+            margin: 0;
+            background: #f3f4f6;
+            font-size: 13px;
+        }
+
+        .print-actions {
+            max-width: 210mm;
+            margin: 14px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .print-actions button,
+        .print-actions a {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            color: #111827;
+            background: #fff;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        }
+
+        .print-actions button {
+            background: #f97316;
+            color: #fff;
+        }
+
+        .document {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 20px;
+            background: #fff;
+            padding: 18mm;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            border-bottom: 3px solid #f97316;
+            padding-bottom: 18px;
+            margin-bottom: 22px;
+        }
+
+        .company h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #f97316;
+            letter-spacing: 1px;
+        }
+
+        .company p {
+            margin: 4px 0;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+
+        .doc-title {
+            text-align: right;
+        }
+
+        .doc-title h2 {
+            margin: 0;
+            font-size: 30px;
+            text-transform: uppercase;
+            color: #111827;
+        }
+
+        .doc-title p {
+            margin: 5px 0;
+            color: #4b5563;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .info-box {
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px;
+            background: #f9fafb;
+        }
+
+        .info-box h4 {
+            margin: 0 0 10px;
+            color: #f97316;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .info-box p {
+            margin: 4px 0;
+            color: #374151;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        thead th {
+            background: #111827;
+            color: #fff;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        tbody td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px;
+            vertical-align: top;
+        }
+
+        .text-end {
+            text-align: right;
+        }
+
+        .totals {
+            width: 45%;
+            margin-left: auto;
+            margin-top: 22px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .total-row:last-child {
+            border-bottom: none;
+        }
+
+        .total-row.final {
+            background: #f97316;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .footer {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .signature {
+            width: 45%;
+            text-align: center;
+            padding-top: 45px;
+            border-top: 1px solid #111827;
+            color: #374151;
+            font-weight: 700;
+        }
+
+        .note {
+            margin-top: 24px;
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .document {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="print-actions">
+    <a href="{% url 'document_center' %}">Retour</a>
+    <button onclick="window.print()">Imprimer</button>
+</div>
+
+<div class="document">
+    <div class="doc-header">
+        <div class="company">
+            <h1>STOCK SINGLE</h1>
+            <p>Gestion de stock, vente et caisse</p>
+            <p>Bamako, Mali</p>
+            <p>Tél : 00 00 00 00</p>
+        </div>
+
+        <div class="doc-title">
+            <h2>Facture</h2>
+            <p><strong>N° :</strong> {{ sale.sale_number }}</p>
+            <p><strong>Date :</strong> {{ sale.sale_date|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-box">
+            <h4>Client</h4>
+            {% if sale.client %}
+                <p><strong>Nom :</strong> {{ sale.client.full_name }}</p>
+                <p><strong>Téléphone :</strong> {{ sale.client.phone|default:"-" }}</p>
+                <p><strong>Adresse :</strong> {{ sale.client.address|default:"-" }}</p>
+            {% else %}
+                <p><strong>Nom :</strong> Client comptoir</p>
+            {% endif %}
+        </div>
+
+        <div class="info-box">
+            <h4>Vente</h4>
+            <p><strong>Vendeur :</strong> {% if sale.created_by %}{{ sale.created_by.username }}{% else %}-{% endif %}</p>
+            <p><strong>Mode paiement :</strong> {{ sale.get_payment_method_display }}</p>
+            <p><strong>Statut :</strong> {{ sale.get_payment_status_display }}</p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Désignation</th>
+                <th class="text-end">Qté</th>
+                <th class="text-end">PU</th>
+                <th class="text-end">Remise</th>
+                <th class="text-end">Montant</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in items %}
+                <tr>
+                    <td>
+                        <strong>{{ item.product.name }}</strong><br>
+                        <small>Réf : {{ item.product.reference|default:"-" }}</small>
+                    </td>
+                    <td class="text-end">{{ item.quantity }} {{ item.product.unit.short_name }}</td>
+                    <td class="text-end">{{ item.unit_price|fcfa }}</td>
+                    <td class="text-end">{{ item.discount|fcfa }}</td>
+                    <td class="text-end"><strong>{{ item.total_line|fcfa }}</strong></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <div class="total-row">
+            <span>Sous-total</span>
+            <strong>{{ sale.subtotal|fcfa }}</strong>
+        </div>
+
+        <div class="total-row">
+            <span>Remise globale</span>
+            <strong>{{ sale.discount|fcfa }}</strong>
+        </div>
+
+        <div class="total-row final">
+            <span>Total net</span>
+            <strong>{{ sale.total|fcfa }}</strong>
+        </div>
+
+        <div class="total-row">
+            <span>Payé</span>
+            <strong>{{ sale.amount_paid|fcfa }}</strong>
+        </div>
+
+        <div class="total-row">
+            <span>Reste</span>
+            <strong>{{ sale.remaining_amount|fcfa }}</strong>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>Note :</strong>
+        Les marchandises vendues ne sont ni reprises ni échangées sauf accord préalable.
+    </div>
+
+    <div class="footer">
+        <div class="signature">Signature client</div>
+        <div class="signature">Signature vendeur</div>
+    </div>
+</div>
+
+</body>
+</html>

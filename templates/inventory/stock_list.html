@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Stock{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Stock</h3>
+        <p>Consultez les quantités disponibles et gérez les entrées/sorties.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'stock_adjustment_create' %}?type=in" class="btn btn-primary-premium">
+            <i class="bi bi-plus-circle"></i>
+            Entrée multi-ligne
+        </a>
+
+        <a href="{% url 'stock_adjustment_create' %}?type=out" class="btn btn-danger-premium">
+            <i class="bi bi-dash-circle"></i>
+            Sortie multi-ligne
+        </a>
+
+        <a href="{% url 'stock_movement_list' %}" class="btn btn-light-premium">
+            <i class="bi bi-clock-history"></i>
+            Mouvements
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-blue">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div>
+                <span>Produits actifs</span>
+                <strong>{{ product_count }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-green">
+                <i class="bi bi-stack"></i>
+            </div>
+            <div>
+                <span>Quantité totale</span>
+                <strong>{{ total_quantity }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-orange">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div>
+                <span>Stock faible</span>
+                <strong>{{ low_stock_count }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-red">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <div>
+                <span>Stock zéro</span>
+                <strong>{{ zero_stock_count }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="premium-panel mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-12 col-lg-4">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Rechercher produit, référence, code-barres...">
+        </div>
+
+        <div class="col-12 col-lg-3">
+            <select name="category" class="form-select">
+                <option value="">Toutes les catégories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-3">
+            <select name="stock" class="form-select">
+                <option value="">Tous les stocks</option>
+                <option value="available" {% if stock_status == "available" %}selected{% endif %}>Disponible</option>
+                <option value="low" {% if stock_status == "low" %}selected{% endif %}>Stock faible</option>
+                <option value="zero" {% if stock_status == "zero" %}selected{% endif %}>Stock zéro</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <button type="submit" class="btn btn-light-premium w-100">
+                <i class="bi bi-funnel"></i>
+                Filtrer
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="premium-panel">
+    <div class="table-responsive">
+        <table class="table premium-table align-middle">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Catégorie</th>
+                    <th>Stock actuel</th>
+                    <th>Stock minimum</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for product in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ product.name }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                Réf : {{ product.reference|default:"-" }}
+                            </small>
+                        </td>
+
+                        <td>{{ product.category.name|default:"-" }}</td>
+
+                        <td>
+                            <strong>{{ product.stock_quantity }} {{ product.unit.short_name }}</strong>
+                        </td>
+
+                        <td>{{ product.alert_quantity }} {{ product.unit.short_name }}</td>
+
+                        <td>
+                            {% if product.stock_quantity == 0 %}
+                                <span class="badge badge-credit">Stock zéro</span>
+                            {% elif product.is_low_stock %}
+                                <span class="badge badge-partial">Stock faible</span>
+                            {% else %}
+                                <span class="badge badge-paid">Disponible</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="{% url 'stock_adjustment_create' %}?type=in&product={{ product.pk }}" class="btn btn-sm btn-light-premium">
+                                <i class="bi bi-plus-circle"></i>
+                            </a>
+
+                            <a href="{% url 'stock_adjustment_create' %}?type=out&product={{ product.pk }}" class="btn btn-sm btn-danger-premium">
+                                <i class="bi bi-dash-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Aucun produit trouvé.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

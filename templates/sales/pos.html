@@ -1,0 +1,1418 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}POS / Vente{% endblock %}
+
+{% block content %}
+
+<div class="pos-page">
+
+    <div class="page-header">
+        <div>
+            <h3>POS / Vente rapide</h3>
+            <p>
+                Recherchez un produit puis cliquez dessus pour l’ajouter
+                directement à la vente.
+            </p>
+        </div>
+
+        <a href="{% url 'sale_list' %}" class="btn btn-light-premium">
+            <i class="bi bi-receipt"></i>
+            Historique ventes
+        </a>
+    </div>
+
+    <!-- =====================================================
+         RECHERCHE GLOBALE DES PRODUITS
+    ====================================================== -->
+
+    <div
+        class="premium-panel pos-product-search-panel mb-4"
+        id="productSearchPanel"
+    >
+        <div class="panel-header">
+            <div>
+                <h5>Rechercher un produit</h5>
+                <small>
+                    Nom, référence ou code-barres
+                </small>
+            </div>
+
+            <div class="pos-search-status" id="productSearchStatus">
+                Commencez à saisir le nom d’un produit
+            </div>
+        </div>
+
+        <div class="pos-main-search">
+            <div class="pos-main-search-icon">
+                <i class="bi bi-search"></i>
+            </div>
+
+            <input
+                type="search"
+                id="productCatalogSearch"
+                class="form-control"
+                placeholder="Exemple : ampoule 20W, STB-001, code-barres..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                class="btn pos-clear-search-btn"
+                id="clearProductSearchBtn"
+                title="Effacer la recherche"
+            >
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div
+            class="pos-product-results"
+            id="productSearchResults"
+            aria-live="polite"
+        >
+            <div class="pos-search-state">
+                <div class="pos-search-state-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+
+                <strong>Recherchez vos produits</strong>
+
+                <span>
+                    Les produits trouvés apparaîtront ici sous forme de cartes.
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         FORMULAIRE DE VENTE
+    ====================================================== -->
+
+    <form method="post" id="posForm" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <!-- =================================================
+                 ARTICLES DE LA VENTE
+            ================================================== -->
+
+            <div class="col-12">
+                <div class="premium-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h5>Articles de la vente</h5>
+                            <small>
+                                Modifiez la quantité, le prix ou la remise.
+                            </small>
+                        </div>
+
+                        <div class="pos-cart-count">
+                            <i class="bi bi-cart3"></i>
+
+                            <span id="cartLineCount">
+                                0 article
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive pos-cart-table-wrapper">
+                        <table class="table premium-table align-middle pos-lines-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 330px;">
+                                        Produit
+                                    </th>
+
+                                    <th style="min-width: 125px;">
+                                        Quantité
+                                    </th>
+
+                                    <th style="min-width: 150px;">
+                                        Prix unitaire
+                                    </th>
+
+                                    <th style="min-width: 140px;">
+                                        Remise
+                                    </th>
+
+                                    <th style="min-width: 170px;">
+                                        Montant
+                                    </th>
+
+                                    <th
+                                        class="text-end"
+                                        style="min-width: 115px;"
+                                    >
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="posLinesBody">
+
+                                {% for row in posted_rows %}
+                                    <tr
+                                        class="pos-line-row"
+                                        data-stock=""
+                                    >
+                                        <td>
+                                            <input
+                                                type="hidden"
+                                                name="product"
+                                                class="product-id-input"
+                                                value="{{ row.product_id }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="product_label"
+                                                class="product-label-hidden"
+                                                value="{{ row.product_label }}"
+                                            >
+
+                                            <div
+                                                class="pos-cart-product {% if not row.product_id %}is-empty{% endif %}"
+                                            >
+                                                <div class="pos-cart-product-icon">
+                                                    {% if row.product_id %}
+                                                        <i class="bi bi-box-seam-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-plus-lg"></i>
+                                                    {% endif %}
+                                                </div>
+
+                                                <div class="pos-cart-product-info">
+                                                    <strong class="cart-product-name">
+                                                        {% if row.product_label %}
+                                                            {{ row.product_label }}
+                                                        {% else %}
+                                                            Ligne vide
+                                                        {% endif %}
+                                                    </strong>
+
+                                                    <span class="cart-product-meta">
+                                                        {% if row.product_id %}
+                                                            Produit sélectionné
+                                                        {% else %}
+                                                            Recherchez un produit pour cette ligne
+                                                        {% endif %}
+                                                    </span>
+
+                                                    <small class="line-stock-warning"></small>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-light-premium replace-product-btn"
+                                                >
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                    Choisir
+                                                </button>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="quantity"
+                                                value="{{ row.quantity }}"
+                                                class="form-control pos-qty"
+                                                min="0.01"
+                                                step="0.01"
+                                                placeholder="Qté"
+                                            >
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="unit_price"
+                                                value="{{ row.unit_price }}"
+                                                class="form-control pos-price"
+                                                min="0"
+                                                step="0.01"
+                                                placeholder="Prix"
+                                            >
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="line_discount"
+                                                value="{{ row.line_discount }}"
+                                                class="form-control pos-line-discount"
+                                                min="0"
+                                                step="0.01"
+                                                placeholder="Remise"
+                                            >
+                                        </td>
+
+                                        <td>
+                                            <strong class="line-total-display">
+                                                0 F CFA
+                                            </strong>
+                                        </td>
+
+                                        <td class="text-end">
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-danger-premium remove-pos-line-btn"
+                                                title="Supprimer cette ligne"
+                                            >
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pos-cart-actions">
+                        <button
+                            type="button"
+                            class="btn btn-light-premium"
+                            id="addPosLineBtn"
+                        >
+                            <i class="bi bi-plus-circle"></i>
+                            Ajouter une ligne
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-light-premium"
+                            id="focusProductSearchBtn"
+                        >
+                            <i class="bi bi-search"></i>
+                            Rechercher un produit
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- =================================================
+                 RÉSUMÉ FACTURE
+            ================================================== -->
+
+            <div class="col-12">
+                <div class="premium-panel pos-summary-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h5>Résumé facture</h5>
+                            <small>
+                                Client, paiement, remise, total et reste à payer.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label">
+                                Client
+                            </label>
+
+                            <div class="d-flex gap-2">
+                                <select
+                                    name="client"
+                                    class="form-select"
+                                >
+                                    <option value="">
+                                        Client comptoir
+                                    </option>
+
+                                    {% for client in clients %}
+                                        <option
+                                            value="{{ client.id }}"
+                                            {% if selected_client_id == client.id|stringformat:"s" %}selected{% endif %}
+                                        >
+                                            {{ client.full_name }}
+
+                                            {% if client.phone %}
+                                                - {{ client.phone }}
+                                            {% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <a
+                                    href="{% url 'client_create' %}"
+                                    class="btn btn-light-premium pos-add-client-btn"
+                                    title="Ajouter un client"
+                                >
+                                    <i class="bi bi-person-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label">
+                                Mode de paiement
+                            </label>
+
+                            <select
+                                name="payment_method"
+                                class="form-select"
+                                id="paymentMethod"
+                            >
+                                {% for value, label in payment_methods %}
+                                    <option
+                                        value="{{ value }}"
+                                        {% if selected_payment_method == value %}selected{% endif %}
+                                    >
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label">
+                                Montant payé
+                            </label>
+
+                            <input
+                                type="number"
+                                name="amount_paid"
+                                value="{{ amount_paid }}"
+                                id="amountPaidInput"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                placeholder="0"
+                            >
+                        </div>
+
+                        <div class="col-12">
+                            <div class="summary-total-box pos-summary-full">
+
+                                <div class="summary-line">
+                                    <span>Sous-total</span>
+
+                                    <strong id="subtotalDisplay">
+                                        0 F CFA
+                                    </strong>
+                                </div>
+
+                                <div class="summary-line">
+                                    <span>Remise globale</span>
+
+                                    <input
+                                        type="number"
+                                        name="discount"
+                                        value="{{ discount }}"
+                                        id="globalDiscountInput"
+                                        class="form-control"
+                                        min="0"
+                                        step="0.01"
+                                    >
+                                </div>
+
+                                <div class="summary-line total">
+                                    <span>Total net</span>
+
+                                    <strong id="netTotalDisplay">
+                                        0 F CFA
+                                    </strong>
+                                </div>
+
+                                <div class="summary-line remaining">
+                                    <span>Reste à payer</span>
+
+                                    <strong id="remainingDisplay">
+                                        0 F CFA
+                                    </strong>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                Notes
+                            </label>
+
+                            <textarea
+                                name="notes"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Note facultative..."
+                            >{{ notes }}</textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <button
+                                type="submit"
+                                class="btn btn-primary-premium w-100 pos-submit-btn"
+                                id="validateSaleBtn"
+                            >
+                                <i class="bi bi-check-circle"></i>
+                                Valider la vente
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+
+<!-- =========================================================
+     MODÈLE D’UNE LIGNE VIDE
+========================================================= -->
+
+<template id="posLineTemplate">
+    <tr class="pos-line-row" data-stock="">
+
+        <td>
+            <input
+                type="hidden"
+                name="product"
+                class="product-id-input"
+            >
+
+            <input
+                type="hidden"
+                name="product_label"
+                class="product-label-hidden"
+            >
+
+            <div class="pos-cart-product is-empty">
+
+                <div class="pos-cart-product-icon">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+
+                <div class="pos-cart-product-info">
+                    <strong class="cart-product-name">
+                        Ligne vide
+                    </strong>
+
+                    <span class="cart-product-meta">
+                        Recherchez un produit pour cette ligne
+                    </span>
+
+                    <small class="line-stock-warning"></small>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-light-premium replace-product-btn"
+                >
+                    <i class="bi bi-arrow-repeat"></i>
+                    Choisir
+                </button>
+
+            </div>
+        </td>
+
+        <td>
+            <input
+                type="number"
+                name="quantity"
+                class="form-control pos-qty"
+                min="0.01"
+                step="0.01"
+                placeholder="Qté"
+            >
+        </td>
+
+        <td>
+            <input
+                type="number"
+                name="unit_price"
+                class="form-control pos-price"
+                min="0"
+                step="0.01"
+                placeholder="Prix"
+            >
+        </td>
+
+        <td>
+            <input
+                type="number"
+                name="line_discount"
+                class="form-control pos-line-discount"
+                min="0"
+                step="0.01"
+                value="0"
+                placeholder="Remise"
+            >
+        </td>
+
+        <td>
+            <strong class="line-total-display">
+                0 F CFA
+            </strong>
+        </td>
+
+        <td class="text-end">
+            <button
+                type="button"
+                class="btn btn-sm btn-danger-premium remove-pos-line-btn"
+            >
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+
+    </tr>
+</template>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchUrl = "{% url 'sale_product_search_api' %}";
+
+    const form = document.getElementById("posForm");
+    const body = document.getElementById("posLinesBody");
+    const lineTemplate = document.getElementById("posLineTemplate");
+
+    const searchPanel = document.getElementById("productSearchPanel");
+    const catalogSearch = document.getElementById("productCatalogSearch");
+    const searchResults = document.getElementById("productSearchResults");
+    const searchStatus = document.getElementById("productSearchStatus");
+    const clearSearchBtn = document.getElementById("clearProductSearchBtn");
+
+    const addLineBtn = document.getElementById("addPosLineBtn");
+    const focusSearchBtn = document.getElementById("focusProductSearchBtn");
+    const validateSaleBtn = document.getElementById("validateSaleBtn");
+
+    const cartLineCount = document.getElementById("cartLineCount");
+
+    const subtotalDisplay = document.getElementById("subtotalDisplay");
+    const netTotalDisplay = document.getElementById("netTotalDisplay");
+    const remainingDisplay = document.getElementById("remainingDisplay");
+
+    const globalDiscountInput =
+        document.getElementById("globalDiscountInput");
+
+    const amountPaidInput =
+        document.getElementById("amountPaidInput");
+
+    let searchTimer = null;
+    let searchController = null;
+    let activeTargetRow = null;
+
+    function toNumber(value) {
+        const number = parseFloat(
+            String(value || "0").replace(",", ".")
+        );
+
+        return Number.isFinite(number) ? number : 0;
+    }
+
+    function formatFcfa(value) {
+        const rounded = Math.round(toNumber(value));
+
+        return (
+            rounded
+                .toLocaleString("fr-FR")
+                .replace(/\u202f/g, " ")
+            + " F CFA"
+        );
+    }
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function productInitial(name) {
+        const text = String(name || "").trim();
+
+        return text ? text.charAt(0).toUpperCase() : "P";
+    }
+
+    function renderInitialSearchState() {
+        searchStatus.textContent =
+            "Commencez à saisir le nom d’un produit";
+
+        searchResults.innerHTML = `
+            <div class="pos-search-state">
+                <div class="pos-search-state-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+
+                <strong>Recherchez vos produits</strong>
+
+                <span>
+                    Les produits trouvés apparaîtront ici sous forme de cartes.
+                </span>
+            </div>
+        `;
+    }
+
+    function renderLoadingState() {
+        searchStatus.textContent =
+            "Recherche en cours...";
+
+        searchResults.innerHTML = `
+            <div class="pos-search-state">
+                <div class="spinner-border text-primary" role="status"></div>
+
+                <strong>Recherche en cours</strong>
+
+                <span>
+                    Veuillez patienter un instant.
+                </span>
+            </div>
+        `;
+    }
+
+    function renderEmptyState() {
+        searchStatus.textContent =
+            "Aucun produit trouvé";
+
+        searchResults.innerHTML = `
+            <div class="pos-search-state">
+                <div class="pos-search-state-icon is-warning">
+                    <i class="bi bi-search"></i>
+                </div>
+
+                <strong>Aucun produit trouvé</strong>
+
+                <span>
+                    Vérifiez le nom, la référence ou le code-barres.
+                </span>
+            </div>
+        `;
+    }
+
+    function renderErrorState() {
+        searchStatus.textContent =
+            "Erreur de recherche";
+
+        searchResults.innerHTML = `
+            <div class="pos-search-state">
+                <div class="pos-search-state-icon is-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+
+                <strong>Impossible de charger les produits</strong>
+
+                <span>
+                    Vérifiez la connexion puis recommencez.
+                </span>
+            </div>
+        `;
+    }
+
+    function getRows() {
+        return Array.from(
+            body.querySelectorAll(".pos-line-row")
+        );
+    }
+
+    function getRowProductId(row) {
+        return row
+            .querySelector(".product-id-input")
+            .value
+            .trim();
+    }
+
+    function findRowByProductId(productId, excludedRow = null) {
+        return getRows().find(function (row) {
+            return (
+                row !== excludedRow
+                && getRowProductId(row) === String(productId)
+            );
+        }) || null;
+    }
+
+    function createEmptyRow() {
+        const clone =
+            lineTemplate.content.cloneNode(true);
+
+        body.appendChild(clone);
+
+        const rows = getRows();
+        const row = rows[rows.length - 1];
+
+        updateCartCounter();
+
+        return row;
+    }
+
+    function resetRow(row) {
+        row.dataset.stock = "";
+
+        row.querySelector(".product-id-input").value = "";
+        row.querySelector(".product-label-hidden").value = "";
+        row.querySelector(".pos-qty").value = "";
+        row.querySelector(".pos-price").value = "";
+        row.querySelector(".pos-line-discount").value = "0";
+
+        row.querySelector(".cart-product-name").textContent =
+            "Ligne vide";
+
+        row.querySelector(".cart-product-meta").textContent =
+            "Recherchez un produit pour cette ligne";
+
+        row.querySelector(".line-stock-warning").textContent = "";
+
+        const card =
+            row.querySelector(".pos-cart-product");
+
+        card.classList.add("is-empty");
+
+        row.querySelector(".pos-cart-product-icon").innerHTML =
+            '<i class="bi bi-plus-lg"></i>';
+
+        row
+            .querySelector(".pos-qty")
+            .classList.remove("is-invalid");
+
+        calculateTotals();
+        updateCartCounter();
+    }
+
+    function fillRowWithProduct(row, product) {
+        const existingRow =
+            findRowByProductId(product.id, row);
+
+        if (existingRow) {
+            const existingQty =
+                existingRow.querySelector(".pos-qty");
+
+            existingQty.value =
+                toNumber(existingQty.value) + 1;
+
+            checkRowStock(existingRow);
+
+            if (
+                !getRowProductId(row)
+                && getRows().length > 1
+            ) {
+                row.remove();
+            }
+
+            activeTargetRow = null;
+
+            calculateTotals();
+            updateCartCounter();
+
+            existingRow.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            existingQty.focus();
+            existingQty.select();
+
+            return;
+        }
+
+        const idInput =
+            row.querySelector(".product-id-input");
+
+        const labelInput =
+            row.querySelector(".product-label-hidden");
+
+        const qtyInput =
+            row.querySelector(".pos-qty");
+
+        const priceInput =
+            row.querySelector(".pos-price");
+
+        const nameElement =
+            row.querySelector(".cart-product-name");
+
+        const metaElement =
+            row.querySelector(".cart-product-meta");
+
+        const warningElement =
+            row.querySelector(".line-stock-warning");
+
+        const productCard =
+            row.querySelector(".pos-cart-product");
+
+        idInput.value = product.id;
+        labelInput.value = product.label;
+
+        row.dataset.stock = product.stock;
+
+        nameElement.textContent = product.name;
+
+        metaElement.textContent =
+            "Réf : "
+            + (product.reference || "-")
+            + " • Stock : "
+            + product.stock
+            + " "
+            + product.unit;
+
+        warningElement.textContent = "";
+
+        productCard.classList.remove("is-empty");
+
+        row.querySelector(".pos-cart-product-icon").textContent =
+            productInitial(product.name);
+
+        if (!qtyInput.value || toNumber(qtyInput.value) <= 0) {
+            qtyInput.value = "1";
+        }
+
+        qtyInput.max = product.stock;
+        priceInput.value = product.sale_price;
+
+        activeTargetRow = null;
+
+        calculateTotals();
+        updateCartCounter();
+        checkRowStock(row);
+
+        row.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+        qtyInput.focus();
+        qtyInput.select();
+    }
+
+    function addProductToCart(product) {
+        if (toNumber(product.stock) <= 0) {
+            return;
+        }
+
+        let row = activeTargetRow;
+
+        if (!row || !document.body.contains(row)) {
+            const existingRow =
+                findRowByProductId(product.id);
+
+            if (existingRow) {
+                const qtyInput =
+                    existingRow.querySelector(".pos-qty");
+
+                qtyInput.value =
+                    toNumber(qtyInput.value) + 1;
+
+                checkRowStock(existingRow);
+                calculateTotals();
+
+                existingRow.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                qtyInput.focus();
+                qtyInput.select();
+
+                clearProductSearch();
+
+                return;
+            }
+
+            const emptyRow = getRows().find(function (currentRow) {
+                return !getRowProductId(currentRow);
+            });
+
+            row = emptyRow || createEmptyRow();
+        }
+
+        fillRowWithProduct(row, product);
+        clearProductSearch();
+    }
+
+    function createProductCard(product) {
+        const stock = toNumber(product.stock);
+        const isUnavailable = stock <= 0;
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+
+        button.className =
+            "pos-product-card"
+            + (isUnavailable ? " is-unavailable" : "");
+
+        button.disabled = isUnavailable;
+
+        button.innerHTML = `
+            <div class="pos-product-card-top">
+                <div class="pos-product-avatar">
+                    ${escapeHtml(productInitial(product.name))}
+                </div>
+
+                <div class="pos-product-card-title">
+                    <strong>
+                        ${escapeHtml(product.name)}
+                    </strong>
+
+                    <span>
+                        Réf : ${escapeHtml(product.reference || "-")}
+                    </span>
+                </div>
+            </div>
+
+            <div class="pos-product-card-details">
+                <div>
+                    <span>Stock disponible</span>
+
+                    <strong class="${isUnavailable ? "text-danger" : ""}">
+                        ${escapeHtml(product.stock)}
+                        ${escapeHtml(product.unit)}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Prix de vente</span>
+
+                    <strong>
+                        ${formatFcfa(product.sale_price)}
+                    </strong>
+                </div>
+            </div>
+
+            <div class="pos-product-card-footer">
+                ${
+                    isUnavailable
+                        ? `
+                            <span class="pos-stock-zero">
+                                <i class="bi bi-x-circle"></i>
+                                Rupture de stock
+                            </span>
+                        `
+                        : `
+                            <span>
+                                <i class="bi bi-plus-circle"></i>
+                                Ajouter à la vente
+                            </span>
+                        `
+                }
+            </div>
+        `;
+
+        if (!isUnavailable) {
+            button.addEventListener("click", function () {
+                addProductToCart(product);
+            });
+        }
+
+        return button;
+    }
+
+    function renderProducts(products) {
+        searchResults.innerHTML = "";
+
+        if (!products.length) {
+            renderEmptyState();
+            return;
+        }
+
+        searchStatus.textContent =
+            products.length
+            + (products.length > 1
+                ? " produits trouvés"
+                : " produit trouvé");
+
+        const grid = document.createElement("div");
+        grid.className = "pos-product-grid";
+
+        products.forEach(function (product) {
+            grid.appendChild(
+                createProductCard(product)
+            );
+        });
+
+        searchResults.appendChild(grid);
+    }
+
+    function searchProducts(query) {
+        if (searchController) {
+            searchController.abort();
+        }
+
+        searchController = new AbortController();
+
+        renderLoadingState();
+
+        fetch(
+            searchUrl + "?q=" + encodeURIComponent(query),
+            {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                signal: searchController.signal
+            }
+        )
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("Erreur HTTP");
+                }
+
+                return response.json();
+            })
+            .then(function (data) {
+                renderProducts(data.results || []);
+            })
+            .catch(function (error) {
+                if (error.name === "AbortError") {
+                    return;
+                }
+
+                renderErrorState();
+            });
+    }
+
+    function clearProductSearch() {
+        clearTimeout(searchTimer);
+
+        if (searchController) {
+            searchController.abort();
+        }
+
+        catalogSearch.value = "";
+        renderInitialSearchState();
+        catalogSearch.focus();
+    }
+
+    function focusProductSearch(targetRow = null) {
+        activeTargetRow = targetRow;
+
+        searchPanel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+        window.setTimeout(function () {
+            catalogSearch.focus();
+            catalogSearch.select();
+        }, 350);
+
+        if (targetRow) {
+            searchStatus.textContent =
+                "Choisissez le produit pour la ligne sélectionnée";
+        }
+    }
+
+    function checkRowStock(row) {
+        const stock =
+            toNumber(row.dataset.stock);
+
+        const qtyInput =
+            row.querySelector(".pos-qty");
+
+        const warningElement =
+            row.querySelector(".line-stock-warning");
+
+        const quantity =
+            toNumber(qtyInput.value);
+
+        if (!stock || !getRowProductId(row)) {
+            qtyInput.classList.remove("is-invalid");
+            warningElement.textContent = "";
+            return true;
+        }
+
+        if (quantity > stock) {
+            qtyInput.classList.add("is-invalid");
+
+            warningElement.textContent =
+                "Stock insuffisant. Disponible : "
+                + stock;
+
+            return false;
+        }
+
+        qtyInput.classList.remove("is-invalid");
+        warningElement.textContent = "";
+
+        return true;
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+
+        getRows().forEach(function (row) {
+            const quantity =
+                toNumber(
+                    row.querySelector(".pos-qty").value
+                );
+
+            const price =
+                toNumber(
+                    row.querySelector(".pos-price").value
+                );
+
+            const discount =
+                toNumber(
+                    row.querySelector(".pos-line-discount").value
+                );
+
+            let lineTotal =
+                (quantity * price) - discount;
+
+            if (lineTotal < 0) {
+                lineTotal = 0;
+            }
+
+            subtotal += lineTotal;
+
+            row.querySelector(
+                ".line-total-display"
+            ).textContent = formatFcfa(lineTotal);
+        });
+
+        const globalDiscount =
+            toNumber(globalDiscountInput.value);
+
+        const amountPaid =
+            toNumber(amountPaidInput.value);
+
+        let netTotal =
+            subtotal - globalDiscount;
+
+        if (netTotal < 0) {
+            netTotal = 0;
+        }
+
+        let remaining =
+            netTotal - amountPaid;
+
+        if (remaining < 0) {
+            remaining = 0;
+        }
+
+        subtotalDisplay.textContent =
+            formatFcfa(subtotal);
+
+        netTotalDisplay.textContent =
+            formatFcfa(netTotal);
+
+        remainingDisplay.textContent =
+            formatFcfa(remaining);
+    }
+
+    function updateCartCounter() {
+        const selectedRows = getRows().filter(function (row) {
+            return Boolean(getRowProductId(row));
+        });
+
+        const count = selectedRows.length;
+
+        cartLineCount.textContent =
+            count
+            + (count > 1 ? " articles" : " article");
+    }
+
+    catalogSearch.addEventListener("input", function () {
+        const query =
+            catalogSearch.value.trim();
+
+        clearTimeout(searchTimer);
+
+        if (!query) {
+            renderInitialSearchState();
+            return;
+        }
+
+        searchTimer = window.setTimeout(function () {
+            searchProducts(query);
+        }, 220);
+    });
+
+    catalogSearch.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            clearProductSearch();
+        }
+    });
+
+    clearSearchBtn.addEventListener(
+        "click",
+        clearProductSearch
+    );
+
+    focusSearchBtn.addEventListener("click", function () {
+        focusProductSearch();
+    });
+
+    addLineBtn.addEventListener("click", function () {
+        const row = createEmptyRow();
+
+        focusProductSearch(row);
+    });
+
+    body.addEventListener("input", function (event) {
+        if (
+            event.target.classList.contains("pos-qty")
+            || event.target.classList.contains("pos-price")
+            || event.target.classList.contains("pos-line-discount")
+        ) {
+            const row =
+                event.target.closest(".pos-line-row");
+
+            checkRowStock(row);
+            calculateTotals();
+        }
+    });
+
+    body.addEventListener("click", function (event) {
+        const replaceBtn =
+            event.target.closest(".replace-product-btn");
+
+        if (replaceBtn) {
+            const row =
+                replaceBtn.closest(".pos-line-row");
+
+            focusProductSearch(row);
+            return;
+        }
+
+        const removeBtn =
+            event.target.closest(".remove-pos-line-btn");
+
+        if (!removeBtn) {
+            return;
+        }
+
+        const row =
+            removeBtn.closest(".pos-line-row");
+
+        const rows = getRows();
+
+        if (rows.length === 1) {
+            resetRow(row);
+        } else {
+            row.remove();
+            calculateTotals();
+            updateCartCounter();
+        }
+    });
+
+    globalDiscountInput.addEventListener(
+        "input",
+        calculateTotals
+    );
+
+    amountPaidInput.addEventListener(
+        "input",
+        calculateTotals
+    );
+
+    form.addEventListener("submit", function (event) {
+        const rows = getRows();
+
+        let validLines = 0;
+        let hasError = false;
+
+        rows.forEach(function (row) {
+            const productId =
+                getRowProductId(row);
+
+            const quantity =
+                toNumber(
+                    row.querySelector(".pos-qty").value
+                );
+
+            const price =
+                toNumber(
+                    row.querySelector(".pos-price").value
+                );
+
+            if (!productId) {
+                return;
+            }
+
+            validLines += 1;
+
+            if (quantity <= 0) {
+                row
+                    .querySelector(".pos-qty")
+                    .classList.add("is-invalid");
+
+                hasError = true;
+            }
+
+            if (price < 0) {
+                row
+                    .querySelector(".pos-price")
+                    .classList.add("is-invalid");
+
+                hasError = true;
+            }
+
+            if (!checkRowStock(row)) {
+                hasError = true;
+            }
+        });
+
+        if (validLines === 0) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            alert(
+                "Ajoutez au moins un produit dans la vente."
+            );
+
+            focusProductSearch();
+
+            return;
+        }
+
+        if (hasError) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            alert(
+                "Corrigez les quantités ou les stocks insuffisants."
+            );
+
+            const firstInvalid =
+                form.querySelector(".is-invalid");
+
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                firstInvalid.focus();
+            }
+
+            return;
+        }
+
+        event.stopImmediatePropagation();
+
+        validateSaleBtn.disabled = true;
+
+        validateSaleBtn.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm"
+                aria-hidden="true"
+            ></span>
+            Enregistrement de la vente...
+        `;
+    });
+
+    getRows().forEach(function (row) {
+        const productId = getRowProductId(row);
+
+        if (productId) {
+            row
+                .querySelector(".pos-cart-product")
+                .classList.remove("is-empty");
+        }
+    });
+
+    updateCartCounter();
+    calculateTotals();
+});
+</script>
+
+{% endblock %}

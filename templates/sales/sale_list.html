@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Ventes{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Ventes</h3>
+        <p>Historique des ventes enregistrées.</p>
+    </div>
+
+    <a href="{% url 'sale_pos' %}" class="btn btn-primary-premium">
+        <i class="bi bi-cart-plus"></i>
+        Nouvelle vente
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-blue">
+                <i class="bi bi-bag-check"></i>
+            </div>
+            <div>
+                <span>Total vendu</span>
+                <strong>{{ total_sales|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-green">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div>
+                <span>Total payé</span>
+                <strong>{{ total_paid|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-red">
+                <i class="bi bi-credit-card-2-back"></i>
+            </div>
+            <div>
+                <span>Total crédit</span>
+                <strong>{{ total_remaining|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="premium-panel mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-12 col-lg-7">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Rechercher vente, client, téléphone...">
+        </div>
+
+        <div class="col-12 col-lg-3">
+            <select name="status" class="form-select">
+                <option value="">Tous les statuts</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <button type="submit" class="btn btn-light-premium w-100">
+                <i class="bi bi-search"></i>
+                Chercher
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="premium-panel">
+    <div class="table-responsive">
+        <table class="table premium-table align-middle">
+            <thead>
+                <tr>
+                    <th>N° Vente</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Payé</th>
+                    <th>Reste</th>
+                    <th>Statut</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for sale in page_obj %}
+                    <tr>
+                        <td><strong>{{ sale.sale_number }}</strong></td>
+
+                        <td>
+                            {% if sale.client %}
+                                {{ sale.client.full_name }}
+                            {% else %}
+                                Client comptoir
+                            {% endif %}
+                        </td>
+
+                        <td>{{ sale.sale_date|date:"d/m/Y H:i" }}</td>
+                        <td>{{ sale.total|fcfa }}</td>
+                        <td>{{ sale.amount_paid|fcfa }}</td>
+                        <td>{{ sale.remaining_amount|fcfa }}</td>
+
+                        <td>
+                            {% if sale.payment_status == "paid" %}
+                                <span class="badge badge-paid">Payé</span>
+                            {% elif sale.payment_status == "partial" %}
+                                <span class="badge badge-partial">Partiel</span>
+                            {% elif sale.payment_status == "credit" %}
+                                <span class="badge badge-credit">Crédit</span>
+                            {% else %}
+                                <span class="badge badge-cancelled">Annulé</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="{% url 'sale_detail' sale.pk %}" class="btn btn-sm btn-light-premium">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            Aucune vente trouvée.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

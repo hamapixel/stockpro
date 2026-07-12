@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+{% load money_filters role_tags %}
+
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+
+{% with is_admin=request.user|is_admin_role %}
+
+<div class="dashboard-page">
+
+    <div class="page-header">
+        <div>
+            <h3>Tableau de bord</h3>
+            <p>
+                Vue globale de vos ventes, crédits, produits et caisse.
+            </p>
+        </div>
+
+        <div class="period-filters">
+            <a
+                href="?period=today"
+                class="btn {% if period == 'today' %}btn-primary-premium{% else %}btn-light-premium{% endif %}"
+            >
+                Aujourd’hui
+            </a>
+
+            <a
+                href="?period=yesterday"
+                class="btn {% if period == 'yesterday' %}btn-primary-premium{% else %}btn-light-premium{% endif %}"
+            >
+                Hier
+            </a>
+
+            <a
+                href="?period=week"
+                class="btn {% if period == 'week' %}btn-primary-premium{% else %}btn-light-premium{% endif %}"
+            >
+                Semaine
+            </a>
+
+            <a
+                href="?period=month"
+                class="btn {% if period == 'month' %}btn-primary-premium{% else %}btn-light-premium{% endif %}"
+            >
+                Mois
+            </a>
+
+            <a
+                href="?period=year"
+                class="btn {% if period == 'year' %}btn-primary-premium{% else %}btn-light-premium{% endif %}"
+            >
+                Année
+            </a>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         GRANDES CARTES DES VENTES
+    ====================================================== -->
+
+    <div class="row g-3 mb-4 dashboard-large-cards">
+
+        <div class="col-12 col-md-6">
+            <div class="stat-card stat-orange dashboard-stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+
+                <div class="dashboard-card-copy">
+                    <span>Vente aujourd’hui</span>
+                    <h4>{{ total_today|fcfa }}</h4>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="stat-card stat-blue dashboard-stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-calendar2-minus"></i>
+                </div>
+
+                <div class="dashboard-card-copy">
+                    <span>Vente hier</span>
+                    <h4>{{ total_yesterday|fcfa }}</h4>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="stat-card stat-purple dashboard-stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-week"></i>
+                </div>
+
+                <div class="dashboard-card-copy">
+                    <span>Cette semaine</span>
+                    <h4>{{ total_week|fcfa }}</h4>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="stat-card stat-green dashboard-stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-month"></i>
+                </div>
+
+                <div class="dashboard-card-copy">
+                    <span>Ce mois</span>
+                    <h4>{{ total_month|fcfa }}</h4>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         ENCAISSEMENTS ET CAISSE
+    ====================================================== -->
+
+    <div class="row g-3 mb-4 dashboard-mini-cards">
+
+        <div class="col-12 col-md-6">
+            <div class="mini-card dashboard-mini-card">
+
+                <div class="mini-icon bg-soft-green">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+
+                <div class="dashboard-card-copy">
+                    <span>Encaissé aujourd’hui</span>
+                    <strong>{{ paid_today|fcfa }}</strong>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="mini-card dashboard-mini-card">
+
+                <div class="mini-icon bg-soft-red">
+                    <i class="bi bi-credit-card-2-back"></i>
+                </div>
+
+                <div class="dashboard-card-copy">
+                    <span>Crédit aujourd’hui</span>
+                    <strong>{{ credit_today|fcfa }}</strong>
+                </div>
+
+            </div>
+        </div>
+
+        {% if is_admin %}
+
+            <div class="col-12 col-md-6">
+                <div class="mini-card dashboard-mini-card">
+
+                    <div class="mini-icon bg-soft-orange">
+                        <i class="bi bi-graph-down-arrow"></i>
+                    </div>
+
+                    <div class="dashboard-card-copy">
+                        <span>Dépenses aujourd’hui</span>
+                        <strong>{{ expenses_today|fcfa }}</strong>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="mini-card dashboard-mini-card">
+
+                    <div class="mini-icon bg-soft-blue">
+                        <i class="bi bi-safe2"></i>
+                    </div>
+
+                    <div class="dashboard-card-copy">
+                        <span>Solde caisse jour</span>
+                        <strong>{{ cash_balance_today|fcfa }}</strong>
+                    </div>
+
+                </div>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- =====================================================
+         RÉSUMÉ FILTRÉ
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+
+            <div class="premium-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>
+                            Résumé filtré : {{ period_title }}
+                        </h5>
+
+                        <small>
+                            Ventes, encaissements et crédits selon la période choisie
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1 dashboard-summary-cards">
+
+                    <div class="col-12 col-md-6">
+                        <div class="summary-box dashboard-summary-box">
+                            <span>Total vendu</span>
+                            <strong>{{ filtered_total|fcfa }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="summary-box dashboard-summary-box">
+                            <span>Total encaissé</span>
+                            <strong>{{ filtered_paid|fcfa }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="summary-box dashboard-summary-box">
+                            <span>Total crédit</span>
+                            <strong>{{ filtered_credit|fcfa }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="summary-box dashboard-summary-box">
+                            <span>Nombre de ventes</span>
+                            <strong>{{ filtered_count }}</strong>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =====================================================
+         STOCK, CLIENTS ET TOP PRODUITS
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-xl-6">
+
+            <div class="premium-panel h-100">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>
+                            {% if is_admin %}
+                                Stock & clients
+                            {% else %}
+                                Clients
+                            {% endif %}
+                        </h5>
+
+                        <small>Indicateurs rapides</small>
+                    </div>
+                </div>
+
+                <div class="quick-list">
+
+                    {% if is_admin %}
+
+                        <div class="quick-row">
+                            <span>
+                                <i class="bi bi-box2-heart"></i>
+                                Produits actifs
+                            </span>
+
+                            <strong>{{ product_count }}</strong>
+                        </div>
+
+                        <div class="quick-row">
+                            <span>
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Stock faible
+                            </span>
+
+                            <strong>{{ low_stock_count }}</strong>
+                        </div>
+
+                    {% endif %}
+
+                    <div class="quick-row">
+                        <span>
+                            <i class="bi bi-people"></i>
+                            Clients
+                        </span>
+
+                        <strong>{{ client_count }}</strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>
+                            <i class="bi bi-wallet2"></i>
+                            Clients à crédit
+                        </span>
+
+                        <strong>{{ credit_client_count }}</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-xl-6">
+
+            <div class="premium-panel h-100">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>Produits les plus vendus</h5>
+                        <small>Top 5 des produits</small>
+                    </div>
+                </div>
+
+                <div class="top-products">
+
+                    {% for product in best_products %}
+
+                        <div class="top-product-row dashboard-top-product">
+
+                            <div class="dashboard-product-info">
+                                <strong>
+                                    {{ product.product__name }}
+                                </strong>
+
+                                <span>
+                                    {{ product.total_qty }} vendu(s)
+                                </span>
+                            </div>
+
+                            <b class="dashboard-product-amount">
+                                {{ product.total_amount|fcfa }}
+                            </b>
+
+                        </div>
+
+                    {% empty %}
+
+                        <div class="empty-state">
+                            <i class="bi bi-box"></i>
+                            <p>
+                                Aucun produit vendu pour le moment.
+                            </p>
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         DERNIÈRES VENTES
+    ====================================================== -->
+
+    <div class="row g-3">
+        <div class="col-12">
+
+            <div class="premium-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>Dernières ventes</h5>
+                        <small>
+                            Les ventes les plus récentes
+                        </small>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table premium-table align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>N° Vente</th>
+                                <th>Client</th>
+                                <th>Total</th>
+                                <th>Payé</th>
+                                <th>Reste</th>
+                                <th>Statut</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for sale in recent_sales %}
+
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {{ sale.sale_number }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        {% if sale.client %}
+                                            {{ sale.client.full_name }}
+                                        {% else %}
+                                            Client comptoir
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ sale.total|fcfa }}
+                                    </td>
+
+                                    <td>
+                                        {{ sale.amount_paid|fcfa }}
+                                    </td>
+
+                                    <td>
+                                        {{ sale.remaining_amount|fcfa }}
+                                    </td>
+
+                                    <td>
+                                        {% if sale.payment_status == "paid" %}
+                                            <span class="badge badge-paid">
+                                                Payé
+                                            </span>
+
+                                        {% elif sale.payment_status == "partial" %}
+                                            <span class="badge badge-partial">
+                                                Partiel
+                                            </span>
+
+                                        {% elif sale.payment_status == "credit" %}
+                                            <span class="badge badge-credit">
+                                                Crédit
+                                            </span>
+
+                                        {% else %}
+                                            <span class="badge badge-cancelled">
+                                                Annulé
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a
+                                            href="{% url 'sale_detail' sale.pk %}"
+                                            class="btn btn-sm btn-light-premium"
+                                            title="Voir la vente"
+                                        >
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+                                    <td
+                                        colspan="7"
+                                        class="text-center text-muted py-4"
+                                    >
+                                        Aucune vente pour le moment.
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endwith %}
+
+{% endblock %}

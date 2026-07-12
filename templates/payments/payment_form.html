@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Enregistrer paiement{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Enregistrer paiement</h3>
+        <p>Paiement pour la vente {{ sale.sale_number }}.</p>
+    </div>
+
+    <a href="{% url 'credit_list' %}" class="btn btn-light-premium">
+        <i class="bi bi-arrow-left"></i>
+        Retour crédits
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-5">
+        <div class="premium-panel h-100">
+            <div class="panel-header">
+                <div>
+                    <h5>Résumé vente</h5>
+                    <small>Situation actuelle</small>
+                </div>
+            </div>
+
+            <div class="quick-list">
+                <div class="quick-row">
+                    <span>N° Vente</span>
+                    <strong>{{ sale.sale_number }}</strong>
+                </div>
+
+                <div class="quick-row">
+                    <span>Client</span>
+                    <strong>
+                        {% if sale.client %}
+                            {{ sale.client.full_name }}
+                        {% else %}
+                            Client comptoir
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="quick-row">
+                    <span>Total vente</span>
+                    <strong>{{ sale.total|fcfa }}</strong>
+                </div>
+
+                <div class="quick-row">
+                    <span>Déjà payé</span>
+                    <strong>{{ sale.amount_paid|fcfa }}</strong>
+                </div>
+
+                <div class="quick-row">
+                    <span>Reste à payer</span>
+                    <strong class="text-danger">{{ sale.remaining_amount|fcfa }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <div class="premium-panel">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Montant payé</label>
+                    {{ form.amount }}
+                    {{ form.amount.errors }}
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Mode paiement</label>
+                    {{ form.payment_method }}
+                    {{ form.payment_method.errors }}
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Notes</label>
+                    {{ form.notes }}
+                    {{ form.notes.errors }}
+                </div>
+
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary-premium">
+                        <i class="bi bi-check-circle"></i>
+                        Enregistrer paiement
+                    </button>
+
+                    <a href="{% url 'credit_list' %}" class="btn btn-light-premium">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

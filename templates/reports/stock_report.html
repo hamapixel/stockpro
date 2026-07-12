@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Rapport stock{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Rapport stock</h3>
+        <p>Analyse du stock disponible, faible, zéro et valeur financière.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="?q={{ query }}&category={{ category_id }}&stock={{ stock_status }}&export=csv" class="btn btn-primary-premium">
+            <i class="bi bi-download"></i>
+            Export CSV
+        </a>
+
+        <a href="{% url 'report_dashboard' %}" class="btn btn-light-premium">
+            <i class="bi bi-arrow-left"></i>
+            Retour
+        </a>
+    </div>
+</div>
+
+<div class="premium-panel mb-4">
+    <form method="get" class="row g-2">
+        <div class="col-12 col-lg-4">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Produit, référence, code-barres...">
+        </div>
+
+        <div class="col-12 col-lg-3">
+            <select name="category" class="form-select">
+                <option value="">Toutes les catégories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-3">
+            <select name="stock" class="form-select">
+                <option value="">Tous les stocks</option>
+                <option value="available" {% if stock_status == "available" %}selected{% endif %}>Disponible</option>
+                <option value="low" {% if stock_status == "low" %}selected{% endif %}>Stock faible</option>
+                <option value="zero" {% if stock_status == "zero" %}selected{% endif %}>Stock zéro</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <button type="submit" class="btn btn-light-premium w-100">
+                <i class="bi bi-funnel"></i>
+                Filtrer
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3 mb-4 report-large-cards">
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-blue">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Produits</span>
+                <strong>{{ product_count }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-red">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Stock faible</span>
+                <strong>{{ low_stock_count }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-orange">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Stock zéro</span>
+                <strong>{{ zero_stock_count }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-purple">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Marge stock</span>
+                <strong>{{ margin_value|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4 report-large-cards">
+    <div class="col-12 col-lg-6">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon">
+                <i class="bi bi-box"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Valeur achat du stock</span>
+                <h4>{{ purchase_value|fcfa }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="stat-card stat-green">
+            <div class="stat-icon">
+                <i class="bi bi-tags"></i>
+            </div>
+            <div class="report-card-text">
+                <span>Valeur vente du stock</span>
+                <h4>{{ sale_value|fcfa }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="premium-panel">
+    <div class="table-responsive">
+        <table class="table premium-table align-middle">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Catégorie</th>
+                    <th>Stock</th>
+                    <th>Stock min</th>
+                    <th>Prix achat</th>
+                    <th>Prix vente</th>
+                    <th>Valeur vente</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for product in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ product.name }}</strong>
+                            <br>
+                            <small class="text-muted">Réf : {{ product.reference|default:"-" }}</small>
+                        </td>
+                        <td>{{ product.category.name|default:"-" }}</td>
+                        <td><strong>{{ product.stock_quantity }} {{ product.unit.short_name }}</strong></td>
+                        <td>{{ product.alert_quantity }} {{ product.unit.short_name }}</td>
+                        <td>{{ product.purchase_price|fcfa }}</td>
+                        <td>{{ product.sale_price|fcfa }}</td>
+                        <td>{{ product.stock_quantity|floatformat:0 }} x {{ product.sale_price|fcfa }}</td>
+                        <td>
+                            {% if product.stock_quantity == 0 %}
+                                <span class="badge badge-credit">Stock zéro</span>
+                            {% elif product.is_low_stock %}
+                                <span class="badge badge-partial">Stock faible</span>
+                            {% else %}
+                                <span class="badge badge-paid">Disponible</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            Aucun produit trouvé.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

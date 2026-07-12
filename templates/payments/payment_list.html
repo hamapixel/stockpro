@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Paiements{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Paiements</h3>
+        <p>Historique des paiements enregistrés.</p>
+    </div>
+
+    <a href="{% url 'credit_list' %}" class="btn btn-primary-premium">
+        <i class="bi bi-wallet2"></i>
+        Voir crédits
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-green">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div>
+                <span>Total paiements</span>
+                <strong>{{ total_paid|fcfa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <div class="mini-card">
+            <div class="mini-icon bg-soft-blue">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <div>
+                <span>Nombre paiements</span>
+                <strong>{{ payment_count }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="premium-panel mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-12 col-lg-10">
+            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Rechercher vente, client, téléphone ou note...">
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <button type="submit" class="btn btn-light-premium w-100">
+                <i class="bi bi-search"></i>
+                Chercher
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="premium-panel">
+    <div class="table-responsive">
+        <table class="table premium-table align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Vente</th>
+                    <th>Client</th>
+                    <th>Montant</th>
+                    <th>Mode</th>
+                    <th>Note</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for payment in page_obj %}
+                    <tr>
+                        <td>{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                        <td><strong>{{ payment.sale.sale_number }}</strong></td>
+
+                        <td>
+                            {% if payment.client %}
+                                {{ payment.client.full_name }}
+                            {% else %}
+                                Client comptoir
+                            {% endif %}
+                        </td>
+
+                        <td><strong>{{ payment.amount|fcfa }}</strong></td>
+                        <td>{{ payment.get_payment_method_display }}</td>
+                        <td>{{ payment.notes|default:"-" }}</td>
+
+                        <td class="text-end">
+                            <a href="{% url 'payment_receipt' payment.pk %}" target="_blank" class="btn btn-sm btn-primary-premium">
+                                <i class="bi bi-printer"></i>
+                            </a>
+
+                            <a href="{% url 'sale_detail' payment.sale.pk %}" class="btn btn-sm btn-light-premium">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Aucun paiement trouvé.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
