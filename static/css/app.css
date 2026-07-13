@@ -3779,3 +3779,72 @@ textarea.form-control {
         font-size: 21px;
     }
 }
+/* =========================================================
+   FORMULAIRE DE PAIEMENT
+========================================================= */
+
+.payment-form-page {
+    width: 100%;
+    min-width: 0;
+}
+
+.payment-sale-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.payment-summary-row {
+    width: 100%;
+    min-width: 0;
+    min-height: 65px;
+    padding: 15px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #f8fafc;
+}
+
+.payment-summary-row span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.payment-summary-row strong {
+    min-width: 0;
+    max-width: 60%;
+    color: var(--dark);
+    font-size: 17px;
+    font-weight: 700;
+    text-align: right;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.payment-summary-row.remaining {
+    border-color: rgba(220, 38, 38, 0.18);
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.payment-summary-row.remaining strong {
+    color: var(--red);
+}
+
+@media (max-width: 575.98px) {
+    .payment-summary-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .payment-summary-row strong {
+        width: 100%;
+        max-width: 100%;
+        text-align: left;
+    }
+}

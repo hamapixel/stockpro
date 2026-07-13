@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load money_filters %}
+{% load money_filters role_tags %}
 
 {% block title %}Détail vente{% endblock %}
 
@@ -20,7 +20,7 @@
 
         <div class="sale-detail-actions">
 
-            {% if sale.remaining_amount > 0 %}
+            {% if not sale.is_cancelled and sale.remaining_amount > 0 %}
                 <a
                     href="{% url 'payment_create' sale.pk %}"
                     class="btn btn-primary-premium"
@@ -56,6 +56,27 @@
                 Reçu
             </a>
 
+            {% if request.user|is_admin_role and not sale.is_cancelled %}
+                <form
+                    method="post"
+                    action="{% url 'sale_cancel' sale.pk %}"
+                    class="d-inline"
+                    onsubmit="return confirm(
+                        'Confirmer l’annulation de cette vente ? Le stock des produits sera restauré.'
+                    );"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger-premium"
+                    >
+                        <i class="bi bi-x-circle"></i>
+                        Annuler la vente
+                    </button>
+                </form>
+            {% endif %}
+
             <a
                 href="{% url 'sale_list' %}"
                 class="btn btn-light-premium"
@@ -69,8 +90,30 @@
     </div>
 
     <!-- =====================================================
+         ALERTE VENTE ANNULÉE
+    ====================================================== -->
+
+    {% if sale.is_cancelled %}
+        <div class="alert alert-danger mb-4" role="alert">
+            <div class="d-flex align-items-start gap-3">
+
+                <i class="bi bi-exclamation-triangle fs-4"></i>
+
+                <div>
+                    <strong>Cette vente a été annulée.</strong>
+
+                    <div class="mt-1">
+                        Le stock des produits a été restauré et aucun nouveau
+                        paiement ne peut être enregistré.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- =====================================================
          MONTANTS PRINCIPAUX
-         PAS D’ICÔNES ET PAS DE DOUBLONS
     ====================================================== -->
 
     <div class="row g-3 mb-4 sale-finance-cards">
@@ -128,7 +171,11 @@
                 </strong>
 
                 <small>
-                    Montant restant du client
+                    {% if sale.is_cancelled %}
+                        Vente annulée
+                    {% else %}
+                        Montant restant du client
+                    {% endif %}
                 </small>
 
             </div>
@@ -138,7 +185,7 @@
     </div>
 
     <!-- =====================================================
-         INFORMATIONS ET DÉCOMPOSITION
+         INFORMATIONS ET CALCUL
     ====================================================== -->
 
     <div class="row g-3 mb-4">
@@ -160,9 +207,7 @@
 
                     <div class="quick-row">
 
-                        <span>
-                            Client
-                        </span>
+                        <span>Client</span>
 
                         <strong>
                             {% if sale.client %}
@@ -176,9 +221,7 @@
 
                     <div class="quick-row">
 
-                        <span>
-                            Date
-                        </span>
+                        <span>Date</span>
 
                         <strong>
                             {{ sale.sale_date|date:"d/m/Y H:i" }}
@@ -188,9 +231,7 @@
 
                     <div class="quick-row">
 
-                        <span>
-                            Mode de paiement
-                        </span>
+                        <span>Mode de paiement</span>
 
                         <strong>
                             {{ sale.get_payment_method_display }}
@@ -200,12 +241,30 @@
 
                     <div class="quick-row">
 
-                        <span>
-                            Statut
-                        </span>
+                        <span>Créée par</span>
+
+                        <strong>
+                            {% if sale.created_by %}
+                                {{ sale.created_by.get_full_name|default:sale.created_by.username }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </strong>
+
+                    </div>
+
+                    <div class="quick-row">
+
+                        <span>Statut</span>
 
                         <div>
-                            {% if sale.payment_status == "paid" %}
+                            {% if sale.is_cancelled %}
+
+                                <span class="badge badge-cancelled">
+                                    Annulé
+                                </span>
+
+                            {% elif sale.payment_status == "paid" %}
 
                                 <span class="badge badge-paid">
                                     Payé
@@ -226,7 +285,7 @@
                             {% else %}
 
                                 <span class="badge badge-cancelled">
-                                    Annulé
+                                    {{ sale.get_payment_status_display }}
                                 </span>
 
                             {% endif %}
@@ -240,7 +299,7 @@
 
         </div>
 
-        <!-- DÉCOMPOSITION DU TOTAL -->
+        <!-- DÉTAIL DU CALCUL -->
 
         <div class="col-12 col-xl-7">
 
@@ -366,7 +425,10 @@
 
                             <td>
                                 {{ item.quantity }}
-                                {{ item.product.unit.short_name }}
+
+                                {% if item.product.unit %}
+                                    {{ item.product.unit.short_name }}
+                                {% endif %}
                             </td>
 
                             <td>
@@ -408,7 +470,6 @@
 
     <!-- =====================================================
          PAIEMENTS
-         PAS DE DEUXIÈME BOUTON PAIEMENT
     ====================================================== -->
 
     <div class="premium-panel">
@@ -437,6 +498,7 @@
                         <th>Montant</th>
                         <th>Mode de paiement</th>
                         <th>Note</th>
+                        <th>Enregistré par</th>
                     </tr>
                 </thead>
 
@@ -464,13 +526,21 @@
                                 {{ payment.notes|default:"-" }}
                             </td>
 
+                            <td>
+                                {% if payment.created_by %}
+                                    {{ payment.created_by.get_full_name|default:payment.created_by.username }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
                         </tr>
 
                     {% empty %}
 
                         <tr>
                             <td
-                                colspan="4"
+                                colspan="5"
                                 class="text-center text-muted py-4"
                             >
                                 Aucun paiement enregistré.
