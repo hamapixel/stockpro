@@ -1,11 +1,43 @@
 {% extends "base.html" %}
-{% load money_filters role_tags %}
+{% load static money_filters role_tags l10n %}
 
-{% block title %}Tableau de bord{% endblock %}
+{% block title %}Tableau de bord<script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+    defer
+></script>
+
+<script
+    src="{% static 'js/dashboard_charts.js' %}"
+    defer
+></script>
+
+{% endblock %}
 
 {% block content %}
 
+<link
+    rel="stylesheet"
+    href="{% static 'css/dashboard_charts.css' %}"
+>
+
 {% with is_admin=request.user|is_admin_role %}
+
+<div
+    id="dashboardChartData"
+    class="d-none"
+    data-today="{{ total_today|default:'0'|unlocalize }}"
+    data-yesterday="{{ total_yesterday|default:'0'|unlocalize }}"
+    data-week="{{ total_week|default:'0'|unlocalize }}"
+    data-month="{{ total_month|default:'0'|unlocalize }}"
+    data-paid="{{ paid_today|default:'0'|unlocalize }}"
+    data-credit="{{ credit_today|default:'0'|unlocalize }}"
+    data-expenses="{{ expenses_today|default:'0'|unlocalize }}"
+    data-filtered-total="{{ filtered_total|default:'0'|unlocalize }}"
+    data-filtered-paid="{{ filtered_paid|default:'0'|unlocalize }}"
+    data-filtered-credit="{{ filtered_credit|default:'0'|unlocalize }}"
+    data-period-title="{{ period_title|escape }}"
+    data-is-admin="{% if is_admin %}true{% else %}false{% endif %}"
+></div>
 
 <div class="dashboard-page">
 
@@ -251,6 +283,157 @@
             </div>
 
         </div>
+    </div>
+
+
+    <!-- =====================================================
+         GRAPHIQUES PREMIUM
+    ====================================================== -->
+
+    <div class="row g-3 mb-4 dashboard-charts-row">
+
+        <div class="col-12 col-xl-8">
+
+            <div class="premium-panel dashboard-chart-panel h-100">
+
+                <div class="dashboard-chart-header">
+
+                    <div>
+
+                        <span class="dashboard-chart-kicker">
+                            Analyse commerciale
+                        </span>
+
+                        <h5>Comparatif des ventes</h5>
+
+                        <small>
+                            Aujourd’hui, hier, semaine et mois
+                        </small>
+
+                    </div>
+
+                    <div class="dashboard-chart-badge">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                        Dynamique
+                    </div>
+
+                </div>
+
+                <div class="dashboard-chart-canvas dashboard-chart-canvas-large">
+
+                    <canvas
+                        id="salesComparisonChart"
+                        role="img"
+                        aria-label="Graphique comparatif des ventes"
+                    ></canvas>
+
+                </div>
+
+                <div class="dashboard-chart-footer">
+
+                    <div>
+                        <span>Période active</span>
+                        <strong>{{ period_title }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Total filtré</span>
+                        <strong>{{ filtered_total|fcfa }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Nombre de ventes</span>
+                        <strong>{{ filtered_count }}</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-xl-4">
+
+            <div class="premium-panel dashboard-chart-panel h-100">
+
+                <div class="dashboard-chart-header">
+
+                    <div>
+
+                        <span class="dashboard-chart-kicker">
+                            Situation du jour
+                        </span>
+
+                        <h5>Répartition des ventes</h5>
+
+                        <small>
+                            Encaissé et reste à crédit
+                        </small>
+
+                    </div>
+
+                    <div class="dashboard-chart-badge dashboard-chart-badge-green">
+                        <i class="bi bi-pie-chart-fill"></i>
+                        Donut
+                    </div>
+
+                </div>
+
+                <div class="dashboard-chart-canvas dashboard-donut-canvas">
+
+                    <canvas
+                        id="paymentDistributionChart"
+                        role="img"
+                        aria-label="Diagramme circulaire des paiements et crédits"
+                    ></canvas>
+
+                </div>
+
+                <div class="dashboard-donut-legend">
+
+                    <div class="dashboard-legend-item">
+
+                        <span class="dashboard-legend-dot legend-paid"></span>
+
+                        <div>
+                            <small>Encaissé aujourd’hui</small>
+                            <strong>{{ paid_today|fcfa }}</strong>
+                        </div>
+
+                    </div>
+
+                    <div class="dashboard-legend-item">
+
+                        <span class="dashboard-legend-dot legend-credit"></span>
+
+                        <div>
+                            <small>Crédit aujourd’hui</small>
+                            <strong>{{ credit_today|fcfa }}</strong>
+                        </div>
+
+                    </div>
+
+                    {% if is_admin %}
+
+                        <div class="dashboard-legend-item dashboard-expense-note">
+
+                            <span class="dashboard-legend-dot legend-expense"></span>
+
+                            <div>
+                                <small>Dépenses aujourd’hui</small>
+                                <strong>{{ expenses_today|fcfa }}</strong>
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
     <!-- =====================================================
@@ -503,5 +686,13 @@
 </div>
 
 {% endwith %}
+<script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+    defer
+></script>
 
+<script
+    src="{% static 'js/dashboard_charts.js' %}"
+    defer
+></script>
 {% endblock %}

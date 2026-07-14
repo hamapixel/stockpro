@@ -323,31 +323,27 @@
 
         <main class="content-area">
 
-           <main class="content-area">
+            {% if messages %}
+                <div class="mb-3">
+                    {% for message in messages %}
+                        <div
+                            class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
+                            role="alert"
+                        >
+                            {{ message }}
 
-    {% if messages %}
-        <div class="mb-3">
-            {% for message in messages %}
-                <div
-                    class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
-                    role="alert"
-                >
-                    {{ message }}
-
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Fermer"
-                    ></button>
+                            <button
+                                type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Fermer"
+                            ></button>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+            {% endif %}
 
-    {% block content %}{% endblock %}
-
-</main>
+            {% block content %}{% endblock %}
 
         </main>
 
