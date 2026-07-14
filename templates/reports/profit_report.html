@@ -1,190 +1,196 @@
 {% extends "base.html" %}
-{% load money_filters %}
+{% load static money_filters %}
 
 {% block title %}Bénéfices estimés{% endblock %}
 
 {% block content %}
 
-<div class="page-header">
-    <div>
-        <h3>Bénéfices estimés</h3>
-        <p>Calcul estimatif basé sur le prix d’achat actuel des produits.</p>
-    </div>
+<link rel="stylesheet" href="{% static 'css/report_cards_premium.css' %}">
 
-    <a href="{% url 'report_dashboard' %}" class="btn btn-light-premium">
-        <i class="bi bi-arrow-left"></i>
-        Retour
-    </a>
-</div>
+<div class="report-page">
 
-<div class="alert alert-warning">
-    <strong>Important :</strong>
-    le bénéfice est estimé avec le prix d’achat actuel du produit.
-    Pour un bénéfice historique exact, il faudra plus tard enregistrer le prix d’achat dans chaque ligne de vente.
-</div>
-
-<div class="premium-panel mb-4">
-    <form method="get" class="row g-2">
-        <div class="col-12 col-md-5">
-            <label class="form-label">Date début</label>
-            <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
-        </div>
-
-        <div class="col-12 col-md-5">
-            <label class="form-label">Date fin</label>
-            <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
-        </div>
-
-        <div class="col-12 col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-light-premium w-100">
-                <i class="bi bi-funnel"></i>
-                Filtrer
-            </button>
-        </div>
-    </form>
-</div>
-
-<div class="row g-3 mb-4 report-large-cards">
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="mini-card">
-            <div class="mini-icon bg-soft-blue">
-                <i class="bi bi-receipt"></i>
-            </div>
-            <div class="report-card-text">
-                <span>Nombre ventes</span>
-                <strong>{{ sale_count }}</strong>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="mini-card">
-            <div class="mini-icon bg-soft-green">
-                <i class="bi bi-bag-check"></i>
-            </div>
-            <div class="report-card-text">
-                <span>Chiffre d’affaires brut</span>
-                <strong>{{ gross_revenue|fcfa }}</strong>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="mini-card">
-            <div class="mini-icon bg-soft-orange">
-                <i class="bi bi-percent"></i>
-            </div>
-            <div class="report-card-text">
-                <span>Remises globales</span>
-                <strong>{{ global_discount|fcfa }}</strong>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="mini-card">
-            <div class="mini-icon bg-soft-blue">
-                <i class="bi bi-currency-exchange"></i>
-            </div>
-            <div class="report-card-text">
-                <span>CA net</span>
-                <strong>{{ net_revenue|fcfa }}</strong>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3 mb-4 report-large-cards">
-    <div class="col-12 col-lg-4">
-        <div class="stat-card stat-orange">
-            <div class="stat-icon">
-                <i class="bi bi-box-seam"></i>
-            </div>
-            <div class="report-card-text">
-                <span>Coût marchandises</span>
-                <h4>{{ cost_of_goods|fcfa }}</h4>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-lg-4">
-        <div class="stat-card stat-green">
-            <div class="stat-icon">
-                <i class="bi bi-graph-up-arrow"></i>
-            </div>
-            <div class="report-card-text">
-                <span>Bénéfice brut</span>
-                <h4>{{ gross_profit|fcfa }}</h4>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-lg-4">
-        <div class="stat-card stat-blue">
-            <div class="stat-icon">
-                <i class="bi bi-safe2"></i>
-            </div>
-            <div class="report-card-text">
-                <span>Bénéfice net</span>
-                <h4>{{ net_profit|fcfa }}</h4>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="premium-panel mb-4">
-    <div class="quick-list">
-        <div class="quick-row">
-            <span>Dépenses de la période</span>
-            <strong class="text-danger">{{ total_expenses|fcfa }}</strong>
-        </div>
-
-        <div class="quick-row">
-            <span>Formule</span>
-            <strong>CA net - coût marchandises - dépenses</strong>
-        </div>
-    </div>
-</div>
-
-<div class="premium-panel">
-    <div class="panel-header">
+    <div class="page-header">
         <div>
-            <h5>Produits les plus rentables</h5>
-            <small>Classement selon bénéfice estimé</small>
+            <h3>Bénéfices estimés</h3>
+            <p>Calcul estimatif basé sur le prix d’achat actuel des produits.</p>
+        </div>
+
+        <a href="{% url 'report_dashboard' %}" class="btn btn-light-premium">
+            <i class="bi bi-arrow-left"></i>
+            Retour
+        </a>
+    </div>
+
+    <div class="alert alert-warning">
+        <strong>Important :</strong>
+        le bénéfice est estimé avec le prix d’achat actuel du produit.
+        Pour un bénéfice historique exact, il faudra enregistrer le prix
+        d’achat dans chaque ligne de vente.
+    </div>
+
+    <div class="premium-panel mb-4">
+        <form method="get" class="row g-2">
+            <div class="col-12 col-md-5">
+                <label class="form-label">Date début</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+            </div>
+
+            <div class="col-12 col-md-5">
+                <label class="form-label">Date fin</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+            </div>
+
+            <div class="col-12 col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-light-premium w-100">
+                    <i class="bi bi-funnel"></i>
+                    Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row g-3 mb-4 report-large-cards">
+        <div class="col-12 col-md-6">
+            <div class="mini-card report-summary-card">
+                <div class="mini-icon bg-soft-blue">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <div class="report-card-text">
+                    <span>Nombre de ventes</span>
+                    <strong class="report-count-value">{{ sale_count }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="mini-card report-summary-card">
+                <div class="mini-icon bg-soft-green">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+                <div class="report-card-text">
+                    <span>Chiffre d’affaires brut</span>
+                    <strong class="report-money-value">{{ gross_revenue|fcfa }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="mini-card report-summary-card">
+                <div class="mini-icon bg-soft-orange">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div class="report-card-text">
+                    <span>Remises globales</span>
+                    <strong class="report-money-value">{{ global_discount|fcfa }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="mini-card report-summary-card">
+                <div class="mini-icon bg-soft-blue">
+                    <i class="bi bi-currency-exchange"></i>
+                </div>
+                <div class="report-card-text">
+                    <span>Chiffre d’affaires net</span>
+                    <strong class="report-money-value">{{ net_revenue|fcfa }}</strong>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table premium-table align-middle">
-            <thead>
-                <tr>
-                    <th>Produit</th>
-                    <th>Qté vendue</th>
-                    <th>CA net ligne</th>
-                    <th>Coût</th>
-                    <th>Bénéfice estimé</th>
-                </tr>
-            </thead>
+    <div class="row g-3 mb-4 report-financial-cards">
+        <div class="col-12 col-lg-4">
+            <div class="stat-card stat-orange report-financial-card">
+                <div class="stat-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div class="report-card-text">
+                    <span>Coût marchandises</span>
+                    <h4 class="report-stat-money">{{ cost_of_goods|fcfa }}</h4>
+                </div>
+            </div>
+        </div>
 
-            <tbody>
-                {% for product in top_profit_products %}
-                    <tr>
-                        <td><strong>{{ product.name }}</strong></td>
-                        <td>{{ product.qty }}</td>
-                        <td>{{ product.revenue|fcfa }}</td>
-                        <td>{{ product.cost|fcfa }}</td>
-                        <td><strong>{{ product.profit|fcfa }}</strong></td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            Aucun produit vendu sur cette période.
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="col-12 col-lg-4">
+            <div class="stat-card stat-green report-financial-card">
+                <div class="stat-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="report-card-text">
+                    <span>Bénéfice brut</span>
+                    <h4 class="report-stat-money">{{ gross_profit|fcfa }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="stat-card stat-blue report-financial-card">
+                <div class="stat-icon">
+                    <i class="bi bi-safe2"></i>
+                </div>
+                <div class="report-card-text">
+                    <span>Bénéfice net</span>
+                    <h4 class="report-stat-money">{{ net_profit|fcfa }}</h4>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div class="premium-panel mb-4">
+        <div class="quick-list">
+            <div class="quick-row report-quick-row">
+                <span>Dépenses de la période</span>
+                <strong class="text-danger report-inline-money">{{ total_expenses|fcfa }}</strong>
+            </div>
+
+            <div class="quick-row report-quick-row">
+                <span>Formule</span>
+                <strong>CA net - coût marchandises - dépenses</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="premium-panel">
+        <div class="panel-header">
+            <div>
+                <h5>Produits les plus rentables</h5>
+                <small>Classement selon bénéfice estimé</small>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table premium-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Qté vendue</th>
+                        <th>CA net ligne</th>
+                        <th>Coût</th>
+                        <th>Bénéfice estimé</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in top_profit_products %}
+                        <tr>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>{{ product.qty }}</td>
+                            <td class="report-table-money">{{ product.revenue|fcfa }}</td>
+                            <td class="report-table-money">{{ product.cost|fcfa }}</td>
+                            <td class="report-table-money"><strong>{{ product.profit|fcfa }}</strong></td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                Aucun produit vendu sur cette période.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}
