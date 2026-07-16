@@ -1,0 +1,415 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>{{ document_title }}</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/invoice_company.css' %}"
+    >
+
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #eef2f7;
+            color: #111827;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .print-actions {
+            width: 100%;
+            max-width: 210mm;
+            margin: 14px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .print-actions button,
+        .print-actions a {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #111827;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10);
+        }
+
+        .print-actions button {
+            background:
+                {% if first_movement.movement_type == "out" %}
+                    #dc2626
+                {% else %}
+                    #16a34a
+                {% endif %};
+            color: #ffffff;
+        }
+
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 20px;
+            padding: 10mm;
+            background: #ffffff;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+        }
+
+        .document-title {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            border-bottom: 3px solid
+                {% if first_movement.movement_type == "out" %}
+                    #dc2626
+                {% else %}
+                    #16a34a
+                {% endif %};
+        }
+
+        .document-title h1 {
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+
+        .document-title p {
+            margin: 5px 0 0;
+            color: #64748b;
+        }
+
+        .document-meta {
+            text-align: right;
+        }
+
+        .document-meta strong {
+            display: block;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .summary-grid {
+            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .summary-box {
+            padding: 12px;
+            border: 1px solid #dbe3ef;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .summary-box span {
+            display: block;
+            margin-bottom: 5px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .summary-box strong {
+            display: block;
+            font-size: 15px;
+            overflow-wrap: anywhere;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        th {
+            padding: 9px 7px;
+            background: #111827;
+            color: #ffffff;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        td {
+            padding: 9px 7px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .text-end {
+            text-align: right;
+        }
+
+        .product-name {
+            font-weight: 800;
+        }
+
+        .secondary {
+            display: block;
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 10px;
+        }
+
+        .signatures {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .signature {
+            width: 44%;
+            padding-top: 40px;
+            border-top: 1px solid #111827;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        @media (max-width: 767px) {
+            .sheet {
+                width: 100%;
+                min-height: auto;
+                padding: 16px;
+            }
+
+            .document-title {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .document-meta {
+                text-align: left;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                min-width: 950px;
+            }
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .sheet {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+
+            .summary-box,
+            .document-title,
+            .signatures {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="print-actions">
+    <a href="{% url 'stock_movement_list' %}">
+        Retour
+    </a>
+
+    <button
+        type="button"
+        onclick="window.print();"
+    >
+        Imprimer le bon
+    </button>
+</div>
+
+<main class="sheet">
+
+    {% include "documents/partials/company_header.html" %}
+
+    <div class="document-title">
+        <div>
+            <h1>{{ document_title }}</h1>
+
+            <p>
+                Les produits de cette opération sont
+                affichés ligne par ligne.
+            </p>
+        </div>
+
+        <div class="document-meta">
+            <span>N° du bon</span>
+            <strong>{{ batch_reference }}</strong>
+
+            <p>
+                {{ first_movement.created_at|date:"d/m/Y H:i" }}
+            </p>
+        </div>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-box">
+            <span>Type d’opération</span>
+
+            <strong>
+                {{ first_movement.get_movement_type_display }}
+            </strong>
+        </div>
+
+        <div class="summary-box">
+            <span>Nombre de produits</span>
+            <strong>{{ line_count }}</strong>
+        </div>
+
+        <div class="summary-box">
+            <span>Imprimé le</span>
+            <strong>
+                {{ printed_at|date:"d/m/Y H:i" }}
+            </strong>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 4%;">N°</th>
+                <th style="width: 23%;">Produit</th>
+                <th style="width: 12%;">Référence</th>
+                <th style="width: 13%;">Code-barres</th>
+                <th class="text-end" style="width: 10%;">
+                    Quantité
+                </th>
+                <th class="text-end" style="width: 10%;">
+                    Ancien stock
+                </th>
+                <th class="text-end" style="width: 10%;">
+                    Nouveau stock
+                </th>
+                <th style="width: 18%;">Motif</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for movement in movements %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+
+                    <td>
+                        <span class="product-name">
+                            {{ movement.product.name }}
+                        </span>
+
+                        {% if movement.product.category %}
+                            <span class="secondary">
+                                {{ movement.product.category.name }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ movement.product.reference|default:"-" }}
+                    </td>
+
+                    <td>
+                        {{ movement.product.barcode|default:"-" }}
+                    </td>
+
+                    <td class="text-end">
+                        <strong>
+                            {{ movement.quantity }}
+
+                            {% if movement.product.unit %}
+                                {{ movement.product.unit.short_name }}
+                            {% endif %}
+                        </strong>
+                    </td>
+
+                    <td class="text-end">
+                        {{ movement.old_quantity }}
+
+                        {% if movement.product.unit %}
+                            {{ movement.product.unit.short_name }}
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        {{ movement.new_quantity }}
+
+                        {% if movement.product.unit %}
+                            {{ movement.product.unit.short_name }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ movement.reason|default:"-" }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8">
+                        Aucun produit sur ce bon.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="signatures">
+        <div class="signature">
+            Magasinier
+        </div>
+
+        <div class="signature">
+            Responsable
+        </div>
+    </div>
+
+    {% include "documents/partials/company_footer.html" %}
+
+</main>
+
+</body>
+</html>

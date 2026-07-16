@@ -1,9 +1,12 @@
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
+from django import forms
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import F, Q, Sum
+from django.db.utils import OperationalError, ProgrammingError
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -57,6 +60,277 @@ def get_period_dates(request):
         start_date, end_date = end_date, start_date
 
     return start_date, end_date
+
+
+class ReportPeriodForm(forms.Form):
+    PERIOD_CHOICES = [
+        ("today", "Aujourd’hui"),
+        ("yesterday", "Hier"),
+        ("week", "Cette semaine"),
+        ("month", "Ce mois"),
+        ("year", "Cette année"),
+        ("custom", "Période personnalisée"),
+    ]
+
+    period = forms.ChoiceField(
+        label="Période",
+        choices=PERIOD_CHOICES,
+        required=False,
+        initial="month",
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        ),
+    )
+
+    start_date = forms.DateField(
+        label="Date de début",
+        required=False,
+        widget=forms.DateInput(
+            attrs={
+                "class": "form-control",
+                "type": "date",
+            }
+        ),
+    )
+
+    end_date = forms.DateField(
+        label="Date de fin",
+        required=False,
+        widget=forms.DateInput(
+            attrs={
+                "class": "form-control",
+                "type": "date",
+            }
+        ),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        period = cleaned_data.get("period") or "month"
+        start_date = cleaned_data.get("start_date")
+        end_date = cleaned_data.get("end_date")
+
+        if period == "custom":
+            if not start_date:
+                self.add_error(
+                    "start_date",
+                    "Indiquez la date de début.",
+                )
+
+            if not end_date:
+                self.add_error(
+                    "end_date",
+                    "Indiquez la date de fin.",
+                )
+
+        if (
+            start_date
+            and end_date
+            and start_date > end_date
+        ):
+            self.add_error(
+                "end_date",
+                (
+                    "La date de fin doit être égale "
+                    "ou postérieure à la date de début."
+                ),
+            )
+
+        return cleaned_data
+
+
+def resolve_period(request):
+    """
+    Retourne la période utilisée par les rapports
+    achats et fournisseurs.
+    """
+    today = timezone.localdate()
+
+    if request.GET:
+        form = ReportPeriodForm(request.GET)
+    else:
+        form = ReportPeriodForm(
+            initial={
+                "period": "month",
+            }
+        )
+
+    period = "month"
+    start_date = today.replace(day=1)
+    end_date = today
+    period_label = "Ce mois"
+
+    if form.is_valid():
+        period = (
+            form.cleaned_data.get("period")
+            or "month"
+        )
+
+        if period == "today":
+            start_date = today
+            end_date = today
+            period_label = "Aujourd’hui"
+
+        elif period == "yesterday":
+            yesterday = today - timedelta(
+                days=1
+            )
+            start_date = yesterday
+            end_date = yesterday
+            period_label = "Hier"
+
+        elif period == "week":
+            start_date = today - timedelta(
+                days=today.weekday()
+            )
+            end_date = today
+            period_label = "Cette semaine"
+
+        elif period == "year":
+            start_date = today.replace(
+                month=1,
+                day=1,
+            )
+            end_date = today
+            period_label = "Cette année"
+
+        elif period == "custom":
+            start_date = (
+                form.cleaned_data.get("start_date")
+                or today
+            )
+            end_date = (
+                form.cleaned_data.get("end_date")
+                or start_date
+            )
+            period_label = (
+                f"Du {start_date.strftime('%d/%m/%Y')} "
+                f"au {end_date.strftime('%d/%m/%Y')}"
+            )
+
+        else:
+            period = "month"
+            start_date = today.replace(day=1)
+            end_date = today
+            period_label = "Ce mois"
+
+    return {
+        "form": form,
+        "period": period,
+        "period_label": period_label,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+
+def get_company_data():
+    """
+    Retourne les informations de la société pour les
+    rapports imprimables.
+    """
+    try:
+        from configuration.models import CompanySettings
+
+        company = CompanySettings.get_solo()
+
+        tax_parts = []
+
+        if company.rccm:
+            tax_parts.append(
+                f"RCCM : {company.rccm}"
+            )
+
+        if company.nif:
+            tax_parts.append(
+                f"NIF : {company.nif}"
+            )
+
+        return {
+            "name": company.company_name,
+            "company_name": company.company_name,
+            "legal_name": company.legal_name,
+            "activity": company.activity,
+            "slogan": company.slogan,
+            "address": company.address,
+            "phone": company.phone,
+            "phone_secondary": company.phone_secondary,
+            "email": company.email,
+            "website": company.website,
+            "rccm": company.rccm,
+            "nif": company.nif,
+            "tax_number": " • ".join(
+                tax_parts
+            ),
+            "bank_details": company.bank_details,
+            "invoice_footer_text": (
+                company.invoice_footer_text
+            ),
+            "invoice_terms": company.invoice_terms,
+            "currency_label": company.currency_label,
+        }
+
+    except (
+        ImportError,
+        LookupError,
+        AttributeError,
+        OperationalError,
+        ProgrammingError,
+    ):
+        return {
+            "name": getattr(
+                settings,
+                "COMPANY_NAME",
+                "MSF SARL",
+            ),
+            "company_name": getattr(
+                settings,
+                "COMPANY_NAME",
+                "MSF SARL",
+            ),
+            "legal_name": "",
+            "activity": getattr(
+                settings,
+                "COMPANY_ACTIVITY",
+                (
+                    "Quincaillerie • Électricité • "
+                    "Plomberie • Sanitaire"
+                ),
+            ),
+            "slogan": "",
+            "address": getattr(
+                settings,
+                "COMPANY_ADDRESS",
+                "Bamako, Mali",
+            ),
+            "phone": getattr(
+                settings,
+                "COMPANY_PHONE",
+                "",
+            ),
+            "phone_secondary": "",
+            "email": getattr(
+                settings,
+                "COMPANY_EMAIL",
+                "",
+            ),
+            "website": "",
+            "rccm": "",
+            "nif": "",
+            "tax_number": getattr(
+                settings,
+                "COMPANY_TAX_NUMBER",
+                "",
+            ),
+            "bank_details": "",
+            "invoice_footer_text": (
+                "Merci pour votre confiance."
+            ),
+            "invoice_terms": "",
+            "currency_label": "F CFA",
+        }
 
 
 def calculate_stock_values(products):

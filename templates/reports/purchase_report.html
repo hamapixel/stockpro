@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Rapport des achats{% endblock %}
+
+{% block content %}
+
+<style>
+    .report-money {
+        display: block;
+        max-width: 100%;
+        font-size: clamp(1.05rem, 2vw, 1.55rem);
+        line-height: 1.15;
+        font-weight: 900;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .report-summary-card {
+        height: 100%;
+        min-width: 0;
+        padding: 18px;
+        border: 1px solid #e4e7ec;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .report-summary-card span {
+        display: block;
+        margin-bottom: 8px;
+        color: #667085;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .report-summary-card small {
+        color: #667085;
+    }
+
+    .report-filter-panel {
+        padding: 18px;
+        border: 1px solid #e4e7ec;
+        border-radius: 16px;
+        background: #ffffff;
+    }
+
+    .report-table td,
+    .report-table th {
+        vertical-align: middle;
+    }
+
+    .report-table .money-cell {
+        min-width: 135px;
+        text-align: right;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 767.98px) {
+        .report-table {
+            min-width: 1050px;
+        }
+    }
+</style>
+
+<div class="page-header">
+    <div>
+        <h3>Rapport des achats</h3>
+        <p>
+            Analyse des approvisionnements, paiements
+            et dettes fournisseurs.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a
+            href="{% url 'report_dashboard' %}"
+            class="btn btn-light-premium"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Rapports
+        </a>
+
+        <a
+            href="{% url 'supplier_report' %}"
+            class="btn btn-light-premium"
+        >
+            <i class="bi bi-truck"></i>
+            Fournisseurs
+        </a>
+
+        <a
+            href="{% url 'purchase_report_print' %}?{{ request.GET.urlencode }}"
+            class="btn btn-light-premium"
+            target="_blank"
+            rel="noopener"
+        >
+            <i class="bi bi-printer"></i>
+            Imprimer
+        </a>
+
+        <a
+            href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv"
+            class="btn btn-primary-premium"
+        >
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            Exporter CSV
+        </a>
+    </div>
+</div>
+
+<div class="report-filter-panel mb-4">
+    <form method="get" class="row g-3 align-items-end">
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label">Période</label>
+
+            {% if period_form.period %}
+                {{ period_form.period }}
+            {% else %}
+                <select name="period" class="form-select">
+                    <option value="month">Ce mois</option>
+                    <option value="today">Aujourd’hui</option>
+                    <option value="yesterday">Hier</option>
+                    <option value="week">Cette semaine</option>
+                    <option value="year">Cette année</option>
+                    <option value="custom">Personnalisée</option>
+                </select>
+            {% endif %}
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label">Date de début</label>
+
+            <input
+                type="date"
+                name="start_date"
+                value="{{ start_date_value|default:'' }}"
+                class="form-control"
+            >
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label">Date de fin</label>
+
+            <input
+                type="date"
+                name="end_date"
+                value="{{ end_date_value|default:'' }}"
+                class="form-control"
+            >
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label">Fournisseur</label>
+
+            <select name="supplier" class="form-select">
+                <option value="">Tous les fournisseurs</option>
+
+                {% for supplier in suppliers %}
+                    <option
+                        value="{{ supplier.pk }}"
+                        {% if supplier_id == supplier.pk|stringformat:"s" %}selected{% endif %}
+                    >
+                        {{ supplier.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label">Statut</label>
+
+            <select name="status" class="form-select">
+                <option value="">Tous les statuts</option>
+
+                {% for value, label in status_choices %}
+                    <option
+                        value="{{ value }}"
+                        {% if status == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label">Recherche</label>
+
+            <input
+                type="search"
+                name="q"
+                value="{{ query }}"
+                class="form-control"
+                placeholder="N° achat, fournisseur..."
+            >
+        </div>
+
+        <div class="col-12 d-flex gap-2 flex-wrap">
+            <button
+                type="submit"
+                class="btn btn-primary-premium"
+            >
+                <i class="bi bi-funnel"></i>
+                Appliquer les filtres
+            </button>
+
+            <a
+                href="{% url 'purchase_report' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-arrow-clockwise"></i>
+                Réinitialiser
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<div class="mb-3">
+    <strong>{{ period_label|default:"Période sélectionnée" }}</strong>
+
+    {% if start_date and end_date %}
+        <span class="text-muted">
+            — du {{ start_date|date:"d/m/Y" }}
+            au {{ end_date|date:"d/m/Y" }}
+        </span>
+    {% endif %}
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Nombre d’achats</span>
+            <strong class="report-money">
+                {{ purchase_count|default:0 }}
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Total des achats</span>
+            <strong class="report-money">
+                {{ total_purchase|default:0|fcfa }}
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Montant payé</span>
+            <strong class="report-money text-success">
+                {{ total_paid_on_purchases|default:0|fcfa }}
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Reste fournisseur</span>
+            <strong class="report-money text-danger">
+                {{ total_remaining|default:0|fcfa }}
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Paiements effectués</span>
+            <strong class="report-money">
+                {{ payments_made|default:0|fcfa }}
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Achats payés</span>
+            <strong class="report-money">
+                {{ paid_count|default:0 }}
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Achats partiels</span>
+            <strong class="report-money">
+                {{ partial_count|default:0 }}
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="report-summary-card">
+            <span>Achats à crédit</span>
+            <strong class="report-money">
+                {{ credit_count|default:0 }}
+            </strong>
+        </div>
+    </div>
+
+</div>
+
+{% if top_suppliers %}
+    <div class="premium-panel mb-4">
+        <div class="panel-header">
+            <div>
+                <h5>Principaux fournisseurs</h5>
+                <small>Classement selon le montant des achats</small>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table premium-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Fournisseur</th>
+                        <th class="text-end">Achats</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Payé</th>
+                        <th class="text-end">Reste</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for supplier in top_suppliers %}
+                        <tr>
+                            <td>
+                                <strong>
+                                    {{ supplier.supplier__name|default:"-" }}
+                                </strong>
+
+                                {% if supplier.supplier__phone %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ supplier.supplier__phone }}
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                {{ supplier.purchase_count|default:0 }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ supplier.purchase_total|default:0|fcfa }}
+                            </td>
+
+                            <td class="text-end text-success">
+                                {{ supplier.paid_total|default:0|fcfa }}
+                            </td>
+
+                            <td class="text-end text-danger">
+                                {{ supplier.remaining_total|default:0|fcfa }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+<div class="premium-panel">
+    <div class="panel-header">
+        <div>
+            <h5>Détail des achats</h5>
+            <small>Liste complète selon les filtres appliqués</small>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table premium-table report-table align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>N° achat</th>
+                    <th>Fournisseur</th>
+                    <th>Référence</th>
+                    <th>Statut</th>
+                    <th class="money-cell">Total</th>
+                    <th class="money-cell">Payé</th>
+                    <th class="money-cell">Reste</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for purchase in page_obj %}
+                    <tr>
+                        <td>
+                            {{ purchase.purchase_date|date:"d/m/Y H:i" }}
+                        </td>
+
+                        <td>
+                            <strong>{{ purchase.purchase_number }}</strong>
+                        </td>
+
+                        <td>
+                            <strong>{{ purchase.supplier.name }}</strong>
+
+                            {% if purchase.supplier.phone %}
+                                <br>
+                                <small class="text-muted">
+                                    {{ purchase.supplier.phone }}
+                                </small>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ purchase.supplier_reference|default:"-" }}
+                        </td>
+
+                        <td>
+                            {% if purchase.is_cancelled %}
+                                <span class="badge badge-cancelled">
+                                    Annulé
+                                </span>
+                            {% elif purchase.payment_status == "paid" %}
+                                <span class="badge badge-paid">
+                                    {{ purchase.get_payment_status_display }}
+                                </span>
+                            {% elif purchase.payment_status == "partial" %}
+                                <span class="badge badge-partial">
+                                    {{ purchase.get_payment_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-credit">
+                                    {{ purchase.get_payment_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="money-cell">
+                            <strong>{{ purchase.total|fcfa }}</strong>
+                        </td>
+
+                        <td class="money-cell text-success">
+                            {{ purchase.amount_paid|fcfa }}
+                        </td>
+
+                        <td class="money-cell text-danger">
+                            {{ purchase.remaining_amount|fcfa }}
+                        </td>
+
+                        <td class="text-end">
+                            <a
+                                href="{% url 'purchase_detail' purchase.pk %}"
+                                class="btn btn-sm btn-light-premium"
+                            >
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td
+                            colspan="9"
+                            class="text-center text-muted py-5"
+                        >
+                            Aucun achat trouvé pour cette période.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center mb-0">
+
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.previous_page_number }}"
+                        >
+                            Précédent
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }}
+                        sur {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.next_page_number }}"
+                        >
+                            Suivant
+                        </a>
+                    </li>
+                {% endif %}
+
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+{% endblock %}

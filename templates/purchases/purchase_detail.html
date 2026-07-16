@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+{% load static money_filters %}
+
+{% block title %}{{ purchase.purchase_number }}{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/purchases.css' %}"
+>
+
+<div class="purchase-module-page">
+
+    <div class="page-header">
+
+        <div>
+            <h3>{{ purchase.purchase_number }}</h3>
+
+            <p>
+                Détail complet de l’achat et de l’approvisionnement.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a
+                href="{% url 'purchase_list' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Retour
+            </a>
+
+            {% if not purchase.is_cancelled and purchase.remaining_amount > 0 %}
+
+                <a
+                    href="{% url 'purchase_payment_create' purchase.pk %}"
+                    class="btn btn-primary-premium"
+                >
+                    <i class="bi bi-cash-coin"></i>
+                    Ajouter un paiement
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    {% if purchase.is_cancelled %}
+
+        <div class="alert alert-danger">
+            <i class="bi bi-x-circle me-1"></i>
+
+            Cet achat est annulé. Les quantités ont été
+            retirées du stock.
+        </div>
+
+    {% endif %}
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card purchase-summary-card">
+
+                <div class="mini-icon bg-soft-purple">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+
+                <div class="purchase-card-copy">
+                    <span>Total de l’achat</span>
+
+                    <strong class="purchase-money">
+                        {{ purchase.total|fcfa }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card purchase-summary-card">
+
+                <div class="mini-icon bg-soft-green">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+
+                <div class="purchase-card-copy">
+                    <span>Montant payé</span>
+
+                    <strong class="purchase-money text-success">
+                        {{ purchase.amount_paid|fcfa }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card purchase-summary-card">
+
+                <div class="mini-icon bg-soft-red">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+
+                <div class="purchase-card-copy">
+                    <span>Reste fournisseur</span>
+
+                    <strong class="purchase-money text-danger">
+                        {{ purchase.remaining_amount|fcfa }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card purchase-summary-card">
+
+                <div class="mini-icon bg-soft-blue">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+
+                <div class="purchase-card-copy">
+                    <span>Statut</span>
+
+                    {% if purchase.is_cancelled %}
+                        <strong class="text-danger">
+                            Annulé
+                        </strong>
+                    {% elif purchase.payment_status == "paid" %}
+                        <strong class="text-success">
+                            Payé
+                        </strong>
+                    {% elif purchase.payment_status == "partial" %}
+                        <strong class="text-warning">
+                            Partiel
+                        </strong>
+                    {% else %}
+                        <strong class="text-danger">
+                            Crédit
+                        </strong>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-xl-6">
+
+            <div class="premium-panel h-100">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>Informations de l’achat</h5>
+                        <small>Données générales</small>
+                    </div>
+                </div>
+
+                <div class="quick-list">
+
+                    <div class="quick-row">
+                        <span>Fournisseur</span>
+
+                        <a
+                            href="{% url 'supplier_detail' purchase.supplier.pk %}"
+                            class="fw-bold text-decoration-none"
+                        >
+                            {{ purchase.supplier.name }}
+                        </a>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Date</span>
+
+                        <strong>
+                            {{ purchase.purchase_date|date:"d/m/Y H:i" }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Référence fournisseur</span>
+
+                        <strong>
+                            {{ purchase.supplier_reference|default:"-" }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Mode de paiement</span>
+
+                        <strong>
+                            {{ purchase.get_payment_method_display }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Créé par</span>
+
+                        <strong>
+                            {% if purchase.created_by %}
+                                {{ purchase.created_by.username }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-xl-6">
+
+            <div class="premium-panel h-100">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>Calcul financier</h5>
+                        <small>Sous-total et remise</small>
+                    </div>
+                </div>
+
+                <div class="quick-list">
+
+                    <div class="quick-row">
+                        <span>Sous-total</span>
+
+                        <strong>
+                            {{ purchase.subtotal|fcfa }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Remise globale</span>
+
+                        <strong>
+                            {{ purchase.discount|fcfa }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Total net</span>
+
+                        <strong>
+                            {{ purchase.total|fcfa }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Notes</span>
+
+                        <strong>
+                            {{ purchase.notes|default:"-" }}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="premium-panel mb-4">
+
+        <div class="panel-header">
+            <div>
+                <h5>Marchandises reçues</h5>
+                <small>Produits ajoutés au stock</small>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table premium-table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Prix d’achat</th>
+                        <th>Remise</th>
+                        <th>Montant</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in purchase_items %}
+
+                        <tr>
+                            <td>
+                                <strong>{{ item.product.name }}</strong>
+
+                                <br>
+
+                                <small class="text-muted">
+                                    Réf. :
+                                    {{ item.product.reference|default:"-" }}
+                                </small>
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ item.quantity }}
+                                    {{ item.product.unit.short_name }}
+                                </strong>
+                            </td>
+
+                            <td class="text-nowrap">
+                                {{ item.unit_cost|fcfa }}
+                            </td>
+
+                            <td class="text-nowrap">
+                                {{ item.discount|fcfa }}
+                            </td>
+
+                            <td class="text-nowrap fw-bold">
+                                {{ item.total_line|fcfa }}
+                            </td>
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td
+                                colspan="5"
+                                class="text-center text-muted py-4"
+                            >
+                                Aucune ligne de produit.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <div class="premium-panel mb-4">
+
+        <div class="panel-header">
+
+            <div>
+                <h5>Paiements fournisseurs</h5>
+                <small>Historique des règlements</small>
+            </div>
+
+            {% if not purchase.is_cancelled and purchase.remaining_amount > 0 %}
+
+                <a
+                    href="{% url 'purchase_payment_create' purchase.pk %}"
+                    class="btn btn-sm btn-primary-premium"
+                >
+                    <i class="bi bi-plus-lg"></i>
+                    Paiement
+                </a>
+
+            {% endif %}
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table premium-table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Montant</th>
+                        <th>Mode</th>
+                        <th>Note</th>
+                        <th>Créé par</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for payment in payments %}
+
+                        <tr>
+                            <td>
+                                {{ payment.payment_date|date:"d/m/Y H:i" }}
+                            </td>
+
+                            <td class="text-success fw-bold text-nowrap">
+                                {{ payment.amount|fcfa }}
+                            </td>
+
+                            <td>
+                                {{ payment.get_payment_method_display }}
+                            </td>
+
+                            <td>
+                                {{ payment.notes|default:"-" }}
+                            </td>
+
+                            <td>
+                                {% if payment.created_by %}
+                                    {{ payment.created_by.username }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td
+                                colspan="5"
+                                class="text-center text-muted py-4"
+                            >
+                                Aucun paiement enregistré.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    {% if not purchase.is_cancelled %}
+
+        <div class="premium-panel purchase-danger-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h5>Annuler cet achat</h5>
+
+                    <small>
+                        Les quantités approvisionnées seront
+                        retirées du stock.
+                    </small>
+                </div>
+            </div>
+
+            <form
+                method="post"
+                action="{% url 'purchase_cancel' purchase.pk %}"
+                onsubmit="return confirm('Confirmer l’annulation de cet achat ?');"
+            >
+                {% csrf_token %}
+
+                <label
+                    for="cancelReason"
+                    class="form-label"
+                >
+                    Motif de l’annulation
+                </label>
+
+                <textarea
+                    id="cancelReason"
+                    name="reason"
+                    rows="3"
+                    class="form-control mb-3"
+                    placeholder="Motif facultatif..."
+                ></textarea>
+
+                <button
+                    type="submit"
+                    class="btn btn-danger"
+                >
+                    <i class="bi bi-x-circle"></i>
+                    Annuler définitivement l’achat
+                </button>
+
+            </form>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

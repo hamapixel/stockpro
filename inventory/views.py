@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+from uuid import uuid4
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -6,7 +7,11 @@ from django.core.paginator import Paginator
 from django.db import DatabaseError, transaction
 from django.db.models import F, Q, Sum
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
 from django.utils import timezone
 
 from accounts.decorators import admin_required
@@ -16,6 +21,42 @@ from .models import StockMovement
 
 
 VALID_MOVEMENT_TYPES = {"in", "out"}
+
+
+def generate_batch_reference(movement_type):
+    """
+    Crée une référence commune à toutes les lignes
+    d'une même entrée ou d'une même sortie.
+    """
+    prefix = (
+        "ENT"
+        if movement_type == "in"
+        else "SOR"
+    )
+
+    date_part = timezone.localtime().strftime(
+        "%Y%m%d-%H%M%S"
+    )
+
+    token = uuid4().hex[:6].upper()
+
+    return f"{prefix}-{date_part}-{token}"
+
+
+def get_movement_document_title(movement_type):
+    """
+    Retourne le titre du bon selon le type de mouvement.
+    """
+    if movement_type == StockMovement.MovementType.IN:
+        return "Bon d’entrée de stock"
+
+    if movement_type == StockMovement.MovementType.OUT:
+        return "Bon de sortie de stock"
+
+    if movement_type == StockMovement.MovementType.SALE:
+        return "Mouvement de vente"
+
+    return "Fiche de correction de stock"
 
 
 def to_decimal(value):
@@ -485,6 +526,10 @@ def stock_adjustment_create(
         for row in rows
     ]
 
+    batch_reference = generate_batch_reference(
+        movement_type
+    )
+
     validation_error = None
 
     try:
@@ -629,6 +674,7 @@ def stock_adjustment_create(
                     StockMovement.objects.create(
                         product=product,
                         movement_type=stock_type,
+                        batch_reference=batch_reference,
                         quantity=quantity,
                         old_quantity=old_quantity,
                         new_quantity=new_quantity,
@@ -701,15 +747,19 @@ def stock_adjustment_create(
             ),
         )
 
-    return redirect("stock_list")
+    return redirect(
+        "stock_movement_batch_print",
+        batch_reference=batch_reference,
+    )
 
 
-@admin_required
-def stock_movement_list(request):
+def filter_stock_movements(request):
     """
-    Historique des mouvements de stock.
+    Applique les filtres communs à la liste
+    et à l'impression générale.
     """
     query = request.GET.get("q", "").strip()
+
     movement_type = request.GET.get(
         "type",
         "",
@@ -730,16 +780,20 @@ def stock_movement_list(request):
         .select_related(
             "product",
             "product__unit",
+            "product__category",
         )
-        .order_by("-created_at")
+        .order_by(
+            "-created_at",
+            "-pk",
+        )
     )
 
     if query:
         movements = movements.filter(
             Q(product__name__icontains=query)
-            | Q(
-                product__reference__icontains=query
-            )
+            | Q(product__reference__icontains=query)
+            | Q(product__barcode__icontains=query)
+            | Q(batch_reference__icontains=query)
             | Q(reason__icontains=query)
         )
 
@@ -766,25 +820,171 @@ def stock_movement_list(request):
             created_at__date__lte=end_date
         )
 
-    paginator = Paginator(movements, 20)
+    return movements, {
+        "query": query,
+        "movement_type": movement_type,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+
+@admin_required
+def stock_movement_list(request):
+    """
+    Historique paginé des mouvements de stock.
+    """
+    movements, filters = filter_stock_movements(
+        request
+    )
+
+    paginator = Paginator(
+        movements,
+        20,
+    )
 
     page_obj = paginator.get_page(
         request.GET.get("page")
     )
 
+    filter_params = request.GET.copy()
+    filter_params.pop("page", None)
+
     context = {
         "page_obj": page_obj,
-        "query": query,
-        "movement_type": movement_type,
-        "start_date": start_date,
-        "end_date": end_date,
+        "query": filters["query"],
+        "movement_type": filters["movement_type"],
+        "start_date": filters["start_date"],
+        "end_date": filters["end_date"],
         "movement_choices": (
             StockMovement.MovementType.choices
         ),
+        "filter_query": filter_params.urlencode(),
     }
 
     return render(
         request,
         "inventory/stock_movement_list.html",
+        context,
+    )
+
+
+@admin_required
+def stock_movement_report_print(request):
+    """
+    Imprime tous les mouvements correspondant
+    aux filtres sélectionnés.
+    """
+    movements, filters = filter_stock_movements(
+        request
+    )
+
+    context = {
+        "movements": movements,
+        "movement_count": movements.count(),
+        "query": filters["query"],
+        "movement_type": filters["movement_type"],
+        "start_date": filters["start_date"],
+        "end_date": filters["end_date"],
+        "printed_at": timezone.localtime(),
+    }
+
+    return render(
+        request,
+        "inventory/stock_movement_report_print.html",
+        context,
+    )
+
+
+@admin_required
+def stock_movement_batch_print(
+    request,
+    batch_reference,
+):
+    """
+    Imprime toutes les lignes appartenant au même bon
+    d'entrée ou de sortie.
+    """
+    first_movement = get_object_or_404(
+        StockMovement.objects.select_related(
+            "product",
+            "product__unit",
+            "product__category",
+        ),
+        batch_reference=batch_reference,
+    )
+
+    movements = (
+        StockMovement.objects
+        .select_related(
+            "product",
+            "product__unit",
+            "product__category",
+        )
+        .filter(
+            batch_reference=batch_reference,
+            movement_type=first_movement.movement_type,
+        )
+        .order_by(
+            "created_at",
+            "pk",
+        )
+    )
+
+    context = {
+        "movements": movements,
+        "first_movement": first_movement,
+        "batch_reference": batch_reference,
+        "document_title": get_movement_document_title(
+            first_movement.movement_type
+        ),
+        "line_count": movements.count(),
+        "printed_at": timezone.localtime(),
+    }
+
+    return render(
+        request,
+        "inventory/stock_movement_print.html",
+        context,
+    )
+
+
+@admin_required
+def stock_movement_print(
+    request,
+    movement_pk,
+):
+    """
+    Impression de secours pour un ancien mouvement
+    qui ne possède pas encore de référence de bon.
+    """
+    movement = get_object_or_404(
+        StockMovement.objects.select_related(
+            "product",
+            "product__unit",
+            "product__category",
+        ),
+        pk=movement_pk,
+    )
+
+    if movement.batch_reference:
+        return redirect(
+            "stock_movement_batch_print",
+            batch_reference=movement.batch_reference,
+        )
+
+    context = {
+        "movements": [movement],
+        "first_movement": movement,
+        "batch_reference": f"MVT-{movement.pk}",
+        "document_title": get_movement_document_title(
+            movement.movement_type
+        ),
+        "line_count": 1,
+        "printed_at": timezone.localtime(),
+    }
+
+    return render(
+        request,
+        "inventory/stock_movement_print.html",
         context,
     )

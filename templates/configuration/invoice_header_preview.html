@@ -1,0 +1,66 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Aperçu de l’entête</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/invoice_company.css' %}"
+    >
+
+    <style>
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #eef2f7;
+            font-family: Arial, sans-serif;
+        }
+
+        .preview-sheet {
+            max-width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 12mm;
+            background: #ffffff;
+            box-shadow: 0 16px 45px rgba(15, 23, 42, 0.15);
+        }
+
+        .preview-title {
+            margin: 25px 0;
+            text-align: center;
+            color: #667085;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="preview-sheet">
+
+        {% include "documents/partials/company_header.html" %}
+
+        <div class="preview-title">
+            Aperçu de la facture
+        </div>
+
+        <hr>
+
+        <p>
+            Le contenu réel de la facture apparaîtra sous cette entête.
+        </p>
+
+        {% include "documents/partials/company_footer.html" %}
+
+    </main>
+
+</body>
+</html>

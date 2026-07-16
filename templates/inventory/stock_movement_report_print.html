@@ -1,0 +1,244 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Rapport des mouvements de stock</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/invoice_company.css' %}"
+    >
+
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #eef2f7;
+            color: #111827;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+        }
+
+        .print-actions {
+            max-width: 297mm;
+            margin: 14px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #111827;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .print-actions button {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .sheet {
+            width: 297mm;
+            min-height: 210mm;
+            margin: 0 auto 20px;
+            padding: 10mm;
+            background: #ffffff;
+        }
+
+        .title {
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .title h1 {
+            margin: 0;
+            font-size: 21px;
+            text-transform: uppercase;
+        }
+
+        .title p {
+            margin: 4px 0 0;
+            color: #64748b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        th {
+            padding: 7px;
+            background: #111827;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        td {
+            padding: 7px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .text-end {
+            text-align: right;
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .sheet {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="print-actions">
+    <a href="{% url 'stock_movement_list' %}">
+        Retour
+    </a>
+
+    <button type="button" onclick="window.print();">
+        Imprimer
+    </button>
+</div>
+
+<main class="sheet">
+
+    {% include "documents/partials/company_header.html" %}
+
+    <div class="title">
+        <div>
+            <h1>Rapport des mouvements de stock</h1>
+
+            <p>
+                {{ movement_count }} mouvement(s)
+            </p>
+        </div>
+
+        <div>
+            <strong>Imprimé le</strong>
+
+            <p>
+                {{ printed_at|date:"d/m/Y H:i" }}
+            </p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>N° du bon</th>
+                <th>Produit</th>
+                <th>Type</th>
+                <th class="text-end">Quantité</th>
+                <th class="text-end">Ancien stock</th>
+                <th class="text-end">Nouveau stock</th>
+                <th>Motif</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for movement in movements %}
+                <tr>
+                    <td>
+                        {{ movement.created_at|date:"d/m/Y H:i" }}
+                    </td>
+
+                    <td>
+                        {% if movement.batch_reference %}
+                            {{ movement.batch_reference }}
+                        {% else %}
+                            MVT-{{ movement.pk }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <strong>{{ movement.product.name }}</strong>
+                        <br>
+                        Réf :
+                        {{ movement.product.reference|default:"-" }}
+                    </td>
+
+                    <td>
+                        {{ movement.get_movement_type_display }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ movement.quantity }}
+
+                        {% if movement.product.unit %}
+                            {{ movement.product.unit.short_name }}
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        {{ movement.old_quantity }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ movement.new_quantity }}
+                    </td>
+
+                    <td>
+                        {{ movement.reason|default:"-" }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8">
+                        Aucun mouvement trouvé.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include "documents/partials/company_footer.html" %}
+
+</main>
+
+</body>
+</html>

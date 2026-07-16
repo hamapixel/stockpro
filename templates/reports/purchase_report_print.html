@@ -1,0 +1,462 @@
+{% load static money_filters %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Rapport des achats</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/invoice_company.css' %}"
+    >
+
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #eef2f7;
+            color: #111827;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+        }
+
+        .print-actions {
+            width: 100%;
+            max-width: 297mm;
+            margin: 14px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #111827;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        }
+
+        .print-actions button {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .sheet {
+            width: 297mm;
+            min-height: 210mm;
+            margin: 0 auto 20px;
+            padding: 10mm;
+            background: #ffffff;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+        }
+
+        .report-title {
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .report-title h1 {
+            margin: 0;
+            font-size: 22px;
+            text-transform: uppercase;
+        }
+
+        .report-title p {
+            margin: 4px 0 0;
+            color: #64748b;
+        }
+
+        .period-box {
+            text-align: right;
+        }
+
+        .summary-grid {
+            margin-bottom: 14px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .summary-card {
+            min-width: 0;
+            padding: 10px;
+            border: 1px solid #dbe3ef;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .summary-card span {
+            display: block;
+            margin-bottom: 5px;
+            color: #64748b;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .summary-card strong {
+            display: block;
+            max-width: 100%;
+            font-size: 14px;
+            font-weight: 900;
+            line-height: 1.15;
+            overflow-wrap: anywhere;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-title {
+            margin: 18px 0 8px;
+            padding-left: 8px;
+            border-left: 4px solid #2563eb;
+            font-size: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        th {
+            padding: 8px;
+            background: #111827;
+            color: #ffffff;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        td {
+            padding: 7px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .text-end {
+            text-align: right;
+        }
+
+        .money {
+            min-width: 90px;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 999px;
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        .badge-paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-credit {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-cancelled {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .empty-row {
+            padding: 20px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .print-footer {
+            margin-top: 12px;
+            color: #64748b;
+            font-size: 9px;
+            text-align: right;
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .sheet {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+
+            .summary-card,
+            .report-title {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="print-actions">
+    <a href="{% url 'purchase_report' %}">
+        Retour
+    </a>
+
+    <button
+        type="button"
+        onclick="window.print();"
+    >
+        Imprimer
+    </button>
+</div>
+
+<main class="sheet">
+
+    {% include "documents/partials/company_header.html" %}
+
+    <div class="report-title">
+
+        <div>
+            <h1>Rapport des achats</h1>
+            <p>
+                Approvisionnements, paiements
+                et dettes fournisseurs
+            </p>
+        </div>
+
+        <div class="period-box">
+            <strong>{{ period_label|default:"Période sélectionnée" }}</strong>
+
+            <p>
+                Du {{ start_date|date:"d/m/Y" }}
+                au {{ end_date|date:"d/m/Y" }}
+            </p>
+        </div>
+
+    </div>
+
+    <div class="summary-grid">
+
+        <div class="summary-card">
+            <span>Nombre d’achats</span>
+            <strong>{{ purchase_count|default:0 }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>Total des achats</span>
+            <strong>{{ total_purchase|default:0|fcfa }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>Montant payé</span>
+            <strong>{{ total_paid_on_purchases|default:0|fcfa }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>Reste fournisseur</span>
+            <strong>{{ total_remaining|default:0|fcfa }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>Paiements effectués</span>
+            <strong>{{ payments_made|default:0|fcfa }}</strong>
+        </div>
+
+    </div>
+
+    {% if top_suppliers %}
+        <div class="section-title">
+            Principaux fournisseurs
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Fournisseur</th>
+                    <th class="text-end">Nombre d’achats</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Payé</th>
+                    <th class="text-end">Reste</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for supplier in top_suppliers %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ supplier.supplier__name|default:"-" }}
+                            </strong>
+
+                            {% if supplier.supplier__phone %}
+                                <br>
+                                <small>
+                                    {{ supplier.supplier__phone }}
+                                </small>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            {{ supplier.purchase_count|default:0 }}
+                        </td>
+
+                        <td class="text-end money">
+                            {{ supplier.purchase_total|default:0|fcfa }}
+                        </td>
+
+                        <td class="text-end money">
+                            {{ supplier.paid_total|default:0|fcfa }}
+                        </td>
+
+                        <td class="text-end money">
+                            {{ supplier.remaining_total|default:0|fcfa }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <div class="section-title">
+        Détail des achats
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>N° achat</th>
+                <th>Fournisseur</th>
+                <th>Référence</th>
+                <th>Statut</th>
+                <th class="text-end">Total</th>
+                <th class="text-end">Payé</th>
+                <th class="text-end">Reste</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for purchase in purchases %}
+                <tr>
+                    <td>
+                        {{ purchase.purchase_date|date:"d/m/Y H:i" }}
+                    </td>
+
+                    <td>
+                        <strong>{{ purchase.purchase_number }}</strong>
+                    </td>
+
+                    <td>
+                        <strong>{{ purchase.supplier.name }}</strong>
+
+                        {% if purchase.supplier.phone %}
+                            <br>
+                            <small>{{ purchase.supplier.phone }}</small>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ purchase.supplier_reference|default:"-" }}
+                    </td>
+
+                    <td>
+                        {% if purchase.is_cancelled %}
+                            <span class="badge badge-cancelled">
+                                Annulé
+                            </span>
+                        {% elif purchase.payment_status == "paid" %}
+                            <span class="badge badge-paid">
+                                {{ purchase.get_payment_status_display }}
+                            </span>
+                        {% elif purchase.payment_status == "partial" %}
+                            <span class="badge badge-partial">
+                                {{ purchase.get_payment_status_display }}
+                            </span>
+                        {% else %}
+                            <span class="badge badge-credit">
+                                {{ purchase.get_payment_status_display }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end money">
+                        {{ purchase.total|fcfa }}
+                    </td>
+
+                    <td class="text-end money">
+                        {{ purchase.amount_paid|fcfa }}
+                    </td>
+
+                    <td class="text-end money">
+                        {{ purchase.remaining_amount|fcfa }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8" class="empty-row">
+                        Aucun achat trouvé pour cette période.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include "documents/partials/company_footer.html" %}
+
+    <div class="print-footer">
+        Rapport généré automatiquement par Stock Single.
+    </div>
+
+</main>
+
+</body>
+</html>

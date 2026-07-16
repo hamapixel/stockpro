@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Fournisseurs{% endblock %}
+
+{% block content %}
+
+<div class="supplier-list-page">
+
+    <!-- =====================================================
+         EN-TÊTE
+    ====================================================== -->
+
+    <div class="page-header">
+
+        <div>
+            <h3>Fournisseurs</h3>
+
+            <p>
+                Gérez vos fournisseurs, leurs achats
+                et les dettes restantes.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a
+                href="{% url 'purchase_list' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Retour aux achats
+            </a>
+
+            <a
+                href="{% url 'supplier_create' %}"
+                class="btn btn-primary-premium"
+            >
+                <i class="bi bi-plus-circle"></i>
+                Nouveau fournisseur
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         CARTES RÉCAPITULATIVES
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card h-100">
+
+                <div class="mini-icon bg-soft-blue">
+                    <i class="bi bi-truck"></i>
+                </div>
+
+                <div
+                    class="flex-grow-1"
+                    style="min-width: 0;"
+                >
+                    <span class="d-block text-muted">
+                        Nombre de fournisseurs
+                    </span>
+
+                    <strong
+                        class="d-block fs-4 fw-bold"
+                        style="overflow-wrap: anywhere;"
+                    >
+                        {{ supplier_count }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card h-100">
+
+                <div class="mini-icon bg-soft-red">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+
+                <div
+                    class="flex-grow-1"
+                    style="min-width: 0;"
+                >
+                    <span class="d-block text-muted">
+                        Dette totale fournisseurs
+                    </span>
+
+                    <strong
+                        class="d-block fw-bold text-danger"
+                        style="
+                            font-size: clamp(
+                                1.15rem,
+                                2.6vw,
+                                1.75rem
+                            );
+                            overflow-wrap: anywhere;
+                            line-height: 1.2;
+                        "
+                    >
+                        {{ total_balance|fcfa }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         FILTRES
+    ====================================================== -->
+
+    <div class="premium-panel mb-4">
+
+        <div class="panel-header">
+
+            <div>
+                <h5>Rechercher un fournisseur</h5>
+
+                <small>
+                    Recherche par nom, téléphone,
+                    adresse ou e-mail
+                </small>
+            </div>
+
+        </div>
+
+        <form
+            method="get"
+            class="row g-3"
+        >
+
+            <div class="col-12 col-lg-7">
+
+                <label
+                    for="supplierSearch"
+                    class="form-label"
+                >
+                    Recherche
+                </label>
+
+                <input
+                    type="search"
+                    id="supplierSearch"
+                    name="q"
+                    value="{{ query }}"
+                    class="form-control premium-search"
+                    placeholder="Nom, téléphone, adresse, e-mail..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3">
+
+                <label
+                    for="supplierStatus"
+                    class="form-label"
+                >
+                    Statut
+                </label>
+
+                <select
+                    id="supplierStatus"
+                    name="status"
+                    class="form-select"
+                >
+                    <option value="">
+                        Tous les fournisseurs
+                    </option>
+
+                    <option
+                        value="active"
+                        {% if status == "active" %}
+                            selected
+                        {% endif %}
+                    >
+                        Fournisseurs actifs
+                    </option>
+
+                    <option
+                        value="inactive"
+                        {% if status == "inactive" %}
+                            selected
+                        {% endif %}
+                    >
+                        Fournisseurs inactifs
+                    </option>
+                </select>
+
+            </div>
+
+            <div
+                class="col-12 col-md-6 col-lg-2 d-flex align-items-end"
+            >
+
+                <div class="d-flex gap-2 w-100">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary-premium flex-grow-1"
+                    >
+                        <i class="bi bi-funnel"></i>
+                        Filtrer
+                    </button>
+
+                    <a
+                        href="{% url 'supplier_list' %}"
+                        class="btn btn-light-premium"
+                        title="Réinitialiser les filtres"
+                    >
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- =====================================================
+         TABLEAU DES FOURNISSEURS
+    ====================================================== -->
+
+    <div class="premium-panel">
+
+        <div class="panel-header">
+
+            <div>
+                <h5>Liste des fournisseurs</h5>
+
+                <small>
+                    {{ supplier_count }}
+                    fournisseur{{ supplier_count|pluralize }}
+                    trouvé{{ supplier_count|pluralize }}
+                </small>
+            </div>
+
+            <a
+                href="{% url 'supplier_create' %}"
+                class="btn btn-sm btn-primary-premium"
+            >
+                <i class="bi bi-plus-lg"></i>
+                Ajouter
+            </a>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table premium-table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Fournisseur</th>
+                        <th>Contact</th>
+                        <th>Nombre d’achats</th>
+                        <th>Total des achats</th>
+                        <th>Dette actuelle</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for supplier in page_obj %}
+
+                        <tr>
+
+                            <td>
+
+                                <div class="d-flex align-items-center gap-3">
+
+                                    <div
+                                        class="mini-icon bg-soft-blue"
+                                        style="
+                                            width: 42px;
+                                            height: 42px;
+                                            min-width: 42px;
+                                        "
+                                    >
+                                        <i class="bi bi-building"></i>
+                                    </div>
+
+                                    <div style="min-width: 0;">
+
+                                        <a
+                                            href="{% url 'supplier_detail' supplier.pk %}"
+                                            class="text-decoration-none fw-bold"
+                                        >
+                                            {{ supplier.name }}
+                                        </a>
+
+                                        {% if supplier.address %}
+                                            <br>
+
+                                            <small class="text-muted">
+                                                {{ supplier.address|truncatechars:45 }}
+                                            </small>
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {% if supplier.phone %}
+                                    <div class="mb-1">
+                                        <i class="bi bi-telephone me-1"></i>
+                                        {{ supplier.phone }}
+                                    </div>
+                                {% endif %}
+
+                                {% if supplier.email %}
+                                    <small class="text-muted">
+                                        <i class="bi bi-envelope me-1"></i>
+                                        {{ supplier.email }}
+                                    </small>
+                                {% endif %}
+
+                                {% if not supplier.phone and not supplier.email %}
+                                    <span class="text-muted">
+                                        Aucun contact
+                                    </span>
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ supplier.purchase_count|default:0 }}
+                                </strong>
+                            </td>
+
+                            <td>
+
+                                <strong class="text-nowrap">
+                                    {{ supplier.purchase_total|default:0|fcfa }}
+                                </strong>
+
+                            </td>
+
+                            <td>
+
+                                {% if supplier.balance > 0 %}
+
+                                    <strong class="text-danger text-nowrap">
+                                        {{ supplier.balance|fcfa }}
+                                    </strong>
+
+                                {% else %}
+
+                                    <strong class="text-success">
+                                        Aucune dette
+                                    </strong>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if supplier.is_active %}
+
+                                    <span class="badge badge-paid">
+                                        Actif
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge badge-cancelled">
+                                        Inactif
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-end">
+
+                                <div
+                                    class="d-inline-flex flex-wrap justify-content-end gap-1"
+                                >
+
+                                    <a
+                                        href="{% url 'supplier_detail' supplier.pk %}"
+                                        class="btn btn-sm btn-light-premium"
+                                        title="Voir le fournisseur"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    <a
+                                        href="{% url 'supplier_update' supplier.pk %}"
+                                        class="btn btn-sm btn-light-premium"
+                                        title="Modifier le fournisseur"
+                                    >
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                class="text-center text-muted py-5"
+                            >
+
+                                <div class="empty-state">
+
+                                    <i class="bi bi-truck"></i>
+
+                                    <p class="mb-2">
+                                        Aucun fournisseur trouvé.
+                                    </p>
+
+                                    <a
+                                        href="{% url 'supplier_create' %}"
+                                        class="btn btn-primary-premium"
+                                    >
+                                        Créer un fournisseur
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- =================================================
+             PAGINATION
+        ================================================== -->
+
+        {% if page_obj.paginator.num_pages > 1 %}
+
+            <div
+                class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4"
+            >
+
+                <small class="text-muted">
+                    Page {{ page_obj.number }}
+                    sur {{ page_obj.paginator.num_pages }}
+                </small>
+
+                <nav aria-label="Pagination des fournisseurs">
+
+                    <ul class="pagination mb-0">
+
+                        {% if page_obj.has_previous %}
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?q={{ query|urlencode }}&status={{ status }}&page={{ page_obj.previous_page_number }}"
+                                >
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+
+                            </li>
+
+                        {% else %}
+
+                            <li class="page-item disabled">
+
+                                <span class="page-link">
+                                    <i class="bi bi-chevron-left"></i>
+                                </span>
+
+                            </li>
+
+                        {% endif %}
+
+                        <li class="page-item active">
+
+                            <span class="page-link">
+                                {{ page_obj.number }}
+                            </span>
+
+                        </li>
+
+                        {% if page_obj.has_next %}
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?q={{ query|urlencode }}&status={{ status }}&page={{ page_obj.next_page_number }}"
+                                >
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+
+                            </li>
+
+                        {% else %}
+
+                            <li class="page-item disabled">
+
+                                <span class="page-link">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+
+                            </li>
+
+                        {% endif %}
+
+                    </ul>
+
+                </nav>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

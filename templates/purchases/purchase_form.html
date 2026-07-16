@@ -1,0 +1,778 @@
+{% extends "base.html" %}
+{% load static money_filters %}
+
+{% block title %}Nouvel approvisionnement{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/purchases.css' %}"
+>
+
+<div class="purchase-module-page">
+
+    <div class="page-header">
+
+        <div>
+            <h3>Nouvel approvisionnement</h3>
+
+            <p>
+                Recherchez les produits puis cliquez sur leurs cartes
+                pour les ajouter à l’approvisionnement.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'purchase_list' %}"
+            class="btn btn-light-premium"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Retour
+        </a>
+
+    </div>
+
+    <form
+        method="post"
+        id="purchaseForm"
+        novalidate
+    >
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if item_formset.non_form_errors %}
+            <div class="alert alert-danger">
+                {% for error in item_formset.non_form_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- =================================================
+             INFORMATIONS DE L’ACHAT
+        ================================================== -->
+
+        <div class="premium-panel mb-4">
+
+            <div class="panel-header">
+                <div>
+                    <h5>Informations de l’achat</h5>
+                    <small>Fournisseur, date et règlement</small>
+                </div>
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-12 col-lg-6">
+
+                    <label
+                        for="{{ form.supplier.id_for_label }}"
+                        class="form-label"
+                    >
+                        Fournisseur
+                    </label>
+
+                    {{ form.supplier }}
+
+                    {% for error in form.supplier.errors %}
+                        <div class="text-danger small fw-bold mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="col-12 col-lg-6">
+
+                    <label
+                        for="{{ form.supplier_reference.id_for_label }}"
+                        class="form-label"
+                    >
+                        Référence fournisseur
+                    </label>
+
+                    {{ form.supplier_reference }}
+
+                    {% for error in form.supplier_reference.errors %}
+                        <div class="text-danger small fw-bold mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <label
+                        for="{{ form.purchase_date.id_for_label }}"
+                        class="form-label"
+                    >
+                        Date de l’achat
+                    </label>
+
+                    {{ form.purchase_date }}
+
+                    {% for error in form.purchase_date.errors %}
+                        <div class="text-danger small fw-bold mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <label
+                        for="{{ form.payment_method.id_for_label }}"
+                        class="form-label"
+                    >
+                        Mode du premier paiement
+                    </label>
+
+                    {{ form.payment_method }}
+
+                    {% for error in form.payment_method.errors %}
+                        <div class="text-danger small fw-bold mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <label
+                        for="{{ form.discount.id_for_label }}"
+                        class="form-label"
+                    >
+                        Remise globale
+                    </label>
+
+                    {{ form.discount }}
+
+                    {% for error in form.discount.errors %}
+                        <div class="text-danger small fw-bold mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <label
+                        for="{{ form.initial_payment.id_for_label }}"
+                        class="form-label"
+                    >
+                        Montant payé maintenant
+                    </label>
+
+                    {{ form.initial_payment }}
+
+                    {% if form.initial_payment.help_text %}
+                        <small class="text-muted d-block mt-1">
+                            {{ form.initial_payment.help_text }}
+                        </small>
+                    {% endif %}
+
+                    {% for error in form.initial_payment.errors %}
+                        <div class="text-danger small fw-bold mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="col-12">
+
+                    <label
+                        for="{{ form.notes.id_for_label }}"
+                        class="form-label"
+                    >
+                        Notes
+                    </label>
+
+                    {{ form.notes }}
+
+                    {% for error in form.notes.errors %}
+                        <div class="text-danger small fw-bold mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {{ item_formset.management_form }}
+
+        <!-- =================================================
+             CATALOGUE + PANIER D’APPROVISIONNEMENT
+        ================================================== -->
+
+        <div class="row g-4 align-items-start">
+
+            <!-- CATALOGUE PRODUITS -->
+
+            <div class="col-12 col-xl-7">
+
+                <div class="premium-panel purchase-catalog-panel">
+
+                    <div class="panel-header purchase-catalog-header">
+
+                        <div>
+                            <h5>Catalogue des produits</h5>
+
+                            <small>
+                                Cliquez sur un produit pour l’ajouter
+                            </small>
+                        </div>
+
+                        <span
+                            class="purchase-product-count"
+                            id="visibleProductCount"
+                        >
+                            0 produit
+                        </span>
+
+                    </div>
+
+                    <div class="row g-2 mb-3">
+
+                        <div class="col-12 col-md-7">
+
+                            <div class="purchase-search-wrapper">
+
+                                <i class="bi bi-search"></i>
+
+                                <input
+                                    type="search"
+                                    id="purchaseProductSearch"
+                                    class="form-control"
+                                    placeholder="Rechercher nom, référence ou code-barres..."
+                                    autocomplete="off"
+                                >
+
+                                <button
+                                    type="button"
+                                    id="clearPurchaseSearch"
+                                    class="purchase-search-clear"
+                                    title="Effacer la recherche"
+                                    aria-label="Effacer la recherche"
+                                >
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12 col-md-5">
+
+                            <select
+                                id="purchaseCategoryFilter"
+                                class="form-select"
+                            >
+                                <option value="">
+                                    Toutes les catégories
+                                </option>
+
+                                {% regroup item_formset.empty_form.product.field.queryset by category as category_groups %}
+
+                                {% for category_group in category_groups %}
+                                    {% if category_group.grouper %}
+                                        <option
+                                            value="{{ category_group.grouper.pk }}"
+                                        >
+                                            {{ category_group.grouper.name }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="purchaseProductGrid"
+                        class="purchase-product-grid"
+                    >
+
+                        {% for product in item_formset.empty_form.product.field.queryset %}
+
+                            <button
+                                type="button"
+                                class="purchase-product-card"
+                                data-product-card
+                                data-product-id="{{ product.pk }}"
+                                data-product-name="{{ product.name|escape }}"
+                                data-product-reference="{{ product.reference|default:''|escape }}"
+                                data-product-barcode="{{ product.barcode|default:''|escape }}"
+                                data-product-category-id="{% if product.category %}{{ product.category.pk }}{% endif %}"
+                                data-product-category="{% if product.category %}{{ product.category.name|escape }}{% endif %}"
+                                data-product-unit="{% if product.unit %}{{ product.unit.short_name|escape }}{% endif %}"
+                                data-product-cost="{{ product.purchase_price|default:'0' }}"
+                                data-search-text="{{ product.name|lower }} {{ product.reference|default:''|lower }} {{ product.barcode|default:''|lower }} {% if product.category %}{{ product.category.name|lower }}{% endif %}"
+                            >
+
+                                <span class="purchase-product-card-image">
+
+                                    {% if product.image %}
+                                        <img
+                                            src="{{ product.image.url }}"
+                                            alt="{{ product.name }}"
+                                            loading="lazy"
+                                        >
+                                    {% else %}
+                                        <i class="bi bi-box-seam"></i>
+                                    {% endif %}
+
+                                </span>
+
+                                <span class="purchase-product-card-body">
+
+                                    <strong>
+                                        {{ product.name }}
+                                    </strong>
+
+                                    <small>
+                                        {% if product.reference %}
+                                            Réf. {{ product.reference }}
+                                        {% else %}
+                                            Sans référence
+                                        {% endif %}
+                                    </small>
+
+                                    <span class="purchase-product-card-meta">
+
+                                        <span>
+                                            <i class="bi bi-stack"></i>
+                                            {{ product.stock_quantity }}
+                                            {% if product.unit %}
+                                                {{ product.unit.short_name }}
+                                            {% endif %}
+                                        </span>
+
+                                        <b>
+                                            {{ product.purchase_price|fcfa }}
+                                        </b>
+
+                                    </span>
+
+                                </span>
+
+                                <span class="purchase-product-card-add">
+                                    <i class="bi bi-plus-lg"></i>
+                                </span>
+
+                            </button>
+
+                        {% empty %}
+
+                            <div class="empty-state purchase-products-empty">
+                                <i class="bi bi-box"></i>
+
+                                <p>
+                                    Aucun produit actif n’est disponible.
+                                </p>
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <div
+                        id="purchaseNoSearchResult"
+                        class="empty-state purchase-products-empty d-none"
+                    >
+                        <i class="bi bi-search"></i>
+
+                        <p>
+                            Aucun produit ne correspond à cette recherche.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- PANIER D’APPROVISIONNEMENT -->
+
+            <div class="col-12 col-xl-5">
+
+                <div class="purchase-cart-sticky">
+
+                    <div class="premium-panel mb-3">
+
+                        <div class="panel-header">
+
+                            <div>
+                                <h5>Produits sélectionnés</h5>
+
+                                <small>
+                                    Modifiez quantité, prix et remise
+                                </small>
+                            </div>
+
+                            <span
+                                class="purchase-cart-count"
+                                id="purchaseCartCount"
+                            >
+                                0
+                            </span>
+
+                        </div>
+
+                        <div
+                            id="purchaseItemsContainer"
+                            class="purchase-items-container"
+                        >
+
+                            {% for item_form in item_formset %}
+
+                                <div
+                                    class="purchase-item-row"
+                                    data-purchase-row
+                                >
+
+                                    {{ item_form.id }}
+                                    {{ item_form.purchase }}
+
+                                    <input
+                                        type="hidden"
+                                        name="{{ item_form.product.html_name }}"
+                                        id="{{ item_form.product.id_for_label }}"
+                                        value="{{ item_form.product.value|default:'' }}"
+                                        class="purchase-product-input"
+                                    >
+
+                                    <div class="purchase-row-header">
+
+                                        <div class="purchase-selected-product">
+
+                                            <span class="purchase-selected-icon">
+                                                <i class="bi bi-box-seam"></i>
+                                            </span>
+
+                                            <div>
+                                                <strong
+                                                    data-selected-product-name
+                                                >
+                                                    Produit
+                                                </strong>
+
+                                                <small
+                                                    data-selected-product-reference
+                                                >
+                                                    Référence
+                                                </small>
+                                            </div>
+
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            data-remove-row
+                                            title="Retirer le produit"
+                                        >
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+
+                                    </div>
+
+                                    {% for error in item_form.product.errors %}
+                                        <div class="text-danger small fw-bold mb-2">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                    <div class="row g-2">
+
+                                        <div class="col-6">
+
+                                            <label class="form-label">
+                                                Quantité
+                                            </label>
+
+                                            {{ item_form.quantity }}
+
+                                            {% for error in item_form.quantity.errors %}
+                                                <div class="text-danger small fw-bold mt-1">
+                                                    {{ error }}
+                                                </div>
+                                            {% endfor %}
+
+                                        </div>
+
+                                        <div class="col-6">
+
+                                            <label class="form-label">
+                                                Prix d’achat
+                                            </label>
+
+                                            {{ item_form.unit_cost }}
+
+                                            {% for error in item_form.unit_cost.errors %}
+                                                <div class="text-danger small fw-bold mt-1">
+                                                    {{ error }}
+                                                </div>
+                                            {% endfor %}
+
+                                        </div>
+
+                                        <div class="col-6">
+
+                                            <label class="form-label">
+                                                Remise
+                                            </label>
+
+                                            {{ item_form.discount }}
+
+                                            {% for error in item_form.discount.errors %}
+                                                <div class="text-danger small fw-bold mt-1">
+                                                    {{ error }}
+                                                </div>
+                                            {% endfor %}
+
+                                        </div>
+
+                                        <div class="col-6">
+
+                                            <label class="form-label">
+                                                Montant
+                                            </label>
+
+                                            <div
+                                                class="purchase-line-total"
+                                                data-line-total
+                                            >
+                                                0 F CFA
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="d-none">
+                                        {{ item_form.DELETE }}
+                                    </div>
+
+                                    {% if item_form.non_field_errors %}
+                                        <div class="alert alert-danger mt-3 mb-0">
+                                            {% for error in item_form.non_field_errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+
+                                </div>
+
+                            {% endfor %}
+
+                            <div
+                                id="purchaseCartEmpty"
+                                class="purchase-cart-empty"
+                            >
+                                <i class="bi bi-cart-plus"></i>
+
+                                <strong>
+                                    Aucun produit sélectionné
+                                </strong>
+
+                                <small>
+                                    Recherchez puis cliquez sur une carte produit.
+                                </small>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="premium-panel purchase-total-panel">
+
+                        <div class="purchase-total-row">
+                            <span>Sous-total</span>
+
+                            <strong id="purchaseSubtotal">
+                                0 F CFA
+                            </strong>
+                        </div>
+
+                        <div class="purchase-total-row">
+                            <span>Remise globale</span>
+
+                            <strong id="purchaseDiscount">
+                                0 F CFA
+                            </strong>
+                        </div>
+
+                        <div class="purchase-total-row purchase-total-main">
+                            <span>Total net</span>
+
+                            <strong id="purchaseTotal">
+                                0 F CFA
+                            </strong>
+                        </div>
+
+                        <div class="purchase-total-row">
+                            <span>Montant payé</span>
+
+                            <strong
+                                id="purchasePaid"
+                                class="text-success"
+                            >
+                                0 F CFA
+                            </strong>
+                        </div>
+
+                        <div class="purchase-total-row">
+                            <span>Reste fournisseur</span>
+
+                            <strong
+                                id="purchaseRemaining"
+                                class="text-danger"
+                            >
+                                0 F CFA
+                            </strong>
+                        </div>
+
+                        <button
+                            type="submit"
+                            id="submitPurchaseButton"
+                            class="btn btn-primary-premium w-100 mt-3"
+                        >
+                            <i class="bi bi-check-circle"></i>
+                            Enregistrer l’approvisionnement
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<!-- MODÈLE D’UNE LIGNE AJOUTÉE PAR JAVASCRIPT -->
+
+<template id="emptyPurchaseRowTemplate">
+
+    <div
+        class="purchase-item-row"
+        data-purchase-row
+    >
+
+        {{ item_formset.empty_form.id }}
+        {{ item_formset.empty_form.purchase }}
+
+        <input
+            type="hidden"
+            name="{{ item_formset.empty_form.product.html_name }}"
+            id="{{ item_formset.empty_form.product.id_for_label }}"
+            value=""
+            class="purchase-product-input"
+        >
+
+        <div class="purchase-row-header">
+
+            <div class="purchase-selected-product">
+
+                <span class="purchase-selected-icon">
+                    <i class="bi bi-box-seam"></i>
+                </span>
+
+                <div>
+                    <strong data-selected-product-name>
+                        Produit
+                    </strong>
+
+                    <small data-selected-product-reference>
+                        Référence
+                    </small>
+                </div>
+
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-danger"
+                data-remove-row
+                title="Retirer le produit"
+            >
+                <i class="bi bi-trash"></i>
+            </button>
+
+        </div>
+
+        <div class="row g-2">
+
+            <div class="col-6">
+                <label class="form-label">
+                    Quantité
+                </label>
+
+                {{ item_formset.empty_form.quantity }}
+            </div>
+
+            <div class="col-6">
+                <label class="form-label">
+                    Prix d’achat
+                </label>
+
+                {{ item_formset.empty_form.unit_cost }}
+            </div>
+
+            <div class="col-6">
+                <label class="form-label">
+                    Remise
+                </label>
+
+                {{ item_formset.empty_form.discount }}
+            </div>
+
+            <div class="col-6">
+                <label class="form-label">
+                    Montant
+                </label>
+
+                <div
+                    class="purchase-line-total"
+                    data-line-total
+                >
+                    0 F CFA
+                </div>
+            </div>
+
+        </div>
+
+        <div class="d-none">
+            {{ item_formset.empty_form.DELETE }}
+        </div>
+
+    </div>
+
+</template>
+
+<script
+    src="{% static 'js/purchase_form.js' %}"
+    defer
+></script>
+
+{% endblock %}

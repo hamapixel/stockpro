@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paramètres de la société{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/company_settings.css' %}"
+>
+
+<div class="company-settings-page">
+
+    <div class="page-header">
+
+        <div>
+            <h3>Paramètres de la société</h3>
+
+            <p>
+                Les informations et l’entête seront utilisées
+                automatiquement sur les factures.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'invoice_header_preview' %}"
+            class="btn btn-light-premium"
+            target="_blank"
+            rel="noopener"
+        >
+            <i class="bi bi-eye"></i>
+            Prévisualiser l’entête
+        </a>
+
+    </div>
+
+    <form
+        method="post"
+        enctype="multipart/form-data"
+        novalidate
+    >
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="row g-4">
+
+            <div class="col-12 col-xl-7">
+
+                <div class="premium-panel mb-4">
+
+                    <div class="panel-header">
+                        <div>
+                            <h5>Identité de la société</h5>
+                            <small>Informations visibles sur les documents</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Nom de la société</label>
+                            {{ form.company_name }}
+
+                            {% for error in form.company_name.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Raison sociale</label>
+                            {{ form.legal_name }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Activité</label>
+                            {{ form.activity }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Slogan</label>
+                            {{ form.slogan }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Adresse</label>
+                            {{ form.address }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Téléphone principal</label>
+                            {{ form.phone }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Téléphone secondaire</label>
+                            {{ form.phone_secondary }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">E-mail</label>
+                            {{ form.email }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Site web</label>
+                            {{ form.website }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">RCCM</label>
+                            {{ form.rccm }}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">NIF</label>
+                            {{ form.nif }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Coordonnées bancaires</label>
+                            {{ form.bank_details }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Devise affichée</label>
+                            {{ form.currency_label }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="premium-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h5>Pied des factures</h5>
+                            <small>Message et conditions commerciales</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                Message de pied de facture
+                            </label>
+                            {{ form.invoice_footer_text }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                Conditions ou observations
+                            </label>
+                            {{ form.invoice_terms }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-12 col-xl-5">
+
+                <div class="premium-panel mb-4">
+
+                    <div class="panel-header">
+                        <div>
+                            <h5>Logo</h5>
+                            <small>PNG, JPG ou WEBP — maximum 5 Mo</small>
+                        </div>
+                    </div>
+
+                    {% if company_settings.logo %}
+                        <div class="settings-image-preview settings-logo-preview">
+                            <img
+                                src="{{ company_settings.logo.url }}"
+                                alt="Logo actuel"
+                            >
+                        </div>
+
+                        <div class="form-check mt-3">
+                            {{ form.remove_logo }}
+
+                            <label
+                                class="form-check-label"
+                                for="{{ form.remove_logo.id_for_label }}"
+                            >
+                                Supprimer le logo actuel
+                            </label>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3">
+                        {{ form.logo }}
+
+                        {% for error in form.logo.errors %}
+                            <div class="text-danger small fw-bold mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <div class="premium-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h5>Entête des factures</h5>
+
+                            <small>
+                                Choisissez l’entête MSF ou une entête
+                                automatique avec vos informations.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="settings-radio-list mb-3">
+                        {{ form.invoice_header_mode }}
+                    </div>
+
+                    <div class="settings-image-preview settings-header-preview">
+                        {% if company_settings.invoice_header %}
+                            <img
+                                src="{{ company_settings.invoice_header.url }}"
+                                alt="Entête actuelle"
+                            >
+                        {% else %}
+                            <img
+                                src="{% static 'images/msf_invoice_header.jpg' %}"
+                                alt="Entête MSF par défaut"
+                            >
+                        {% endif %}
+                    </div>
+
+                    {% if company_settings.invoice_header %}
+                        <div class="form-check mt-3">
+                            {{ form.remove_invoice_header }}
+
+                            <label
+                                class="form-check-label"
+                                for="{{ form.remove_invoice_header.id_for_label }}"
+                            >
+                                Revenir à l’entête MSF par défaut
+                            </label>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3">
+                        <label class="form-label">
+                            Remplacer l’image d’entête
+                        </label>
+
+                        {{ form.invoice_header }}
+
+                        {% for error in form.invoice_header.errors %}
+                            <div class="text-danger small fw-bold mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">
+                            Hauteur de l’entête en millimètres
+                        </label>
+
+                        {{ form.invoice_header_height_mm }}
+
+                        {% if form.invoice_header_height_mm.help_text %}
+                            <small class="text-muted d-block mt-1">
+                                {{ form.invoice_header_height_mm.help_text }}
+                            </small>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-check mt-3">
+                        {{ form.show_logo_on_generated_header }}
+
+                        <label
+                            class="form-check-label"
+                            for="{{ form.show_logo_on_generated_header.id_for_label }}"
+                        >
+                            Afficher le logo sur l’entête automatique
+                        </label>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0">
+                        L’image est redimensionnée automatiquement sans
+                        être déformée.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="settings-save-bar">
+
+            <button
+                type="submit"
+                class="btn btn-primary-premium"
+            >
+                <i class="bi bi-check-circle"></i>
+                Enregistrer les paramètres
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

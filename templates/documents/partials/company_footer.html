@@ -1,0 +1,25 @@
+{% if company_settings %}
+
+    <footer class="invoice-company-footer">
+
+        {% if company_settings.invoice_terms %}
+            <div class="invoice-company-terms">
+                {{ company_settings.invoice_terms|linebreaksbr }}
+            </div>
+        {% endif %}
+
+        {% if company_settings.bank_details %}
+            <div class="invoice-company-bank">
+                {{ company_settings.bank_details|linebreaksbr }}
+            </div>
+        {% endif %}
+
+        {% if company_settings.invoice_footer_text %}
+            <strong>
+                {{ company_settings.invoice_footer_text }}
+            </strong>
+        {% endif %}
+
+    </footer>
+
+{% endif %}

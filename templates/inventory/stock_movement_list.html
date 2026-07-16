@@ -7,21 +7,44 @@
 <div class="page-header">
     <div>
         <h3>Mouvements de stock</h3>
-        <p>Historique complet des entrées, sorties, ventes et corrections.</p>
+
+        <p>
+            Historique complet des entrées, sorties,
+            ventes et corrections.
+        </p>
     </div>
 
     <div class="d-flex gap-2 flex-wrap">
-        <a href="{% url 'stock_in_create' %}" class="btn btn-primary-premium">
+        <a
+            href="{% url 'stock_in_create' %}"
+            class="btn btn-primary-premium"
+        >
             <i class="bi bi-plus-circle"></i>
             Entrée
         </a>
 
-        <a href="{% url 'stock_out_create' %}" class="btn btn-danger-premium">
+        <a
+            href="{% url 'stock_out_create' %}"
+            class="btn btn-danger-premium"
+        >
             <i class="bi bi-dash-circle"></i>
             Sortie
         </a>
 
-        <a href="{% url 'stock_list' %}" class="btn btn-light-premium">
+        <a
+            href="{% url 'stock_movement_report_print' %}{% if filter_query %}?{{ filter_query }}{% endif %}"
+            class="btn btn-light-premium"
+            target="_blank"
+            rel="noopener"
+        >
+            <i class="bi bi-printer"></i>
+            Imprimer la liste
+        </a>
+
+        <a
+            href="{% url 'stock_list' %}"
+            class="btn btn-light-premium"
+        >
             <i class="bi bi-arrow-left"></i>
             Stock
         </a>
@@ -30,15 +53,31 @@
 
 <div class="premium-panel mb-3">
     <form method="get" class="row g-2">
+
         <div class="col-12 col-lg-3">
-            <input type="search" name="q" value="{{ query }}" class="form-control premium-search" placeholder="Produit, référence ou motif...">
+            <input
+                type="search"
+                name="q"
+                value="{{ query }}"
+                class="form-control premium-search"
+                placeholder="Produit, bon, référence, code-barres..."
+            >
         </div>
 
         <div class="col-12 col-lg-3">
-            <select name="type" class="form-select">
-                <option value="">Tous les types</option>
+            <select
+                name="type"
+                class="form-select"
+            >
+                <option value="">
+                    Tous les types
+                </option>
+
                 {% for value, label in movement_choices %}
-                    <option value="{{ value }}" {% if movement_type == value %}selected{% endif %}>
+                    <option
+                        value="{{ value }}"
+                        {% if movement_type == value %}selected{% endif %}
+                    >
                         {{ label }}
                     </option>
                 {% endfor %}
@@ -46,81 +85,218 @@
         </div>
 
         <div class="col-12 col-lg-2">
-            <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+            <input
+                type="date"
+                name="start_date"
+                value="{{ start_date }}"
+                class="form-control"
+            >
         </div>
 
         <div class="col-12 col-lg-2">
-            <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+            <input
+                type="date"
+                name="end_date"
+                value="{{ end_date }}"
+                class="form-control"
+            >
         </div>
 
         <div class="col-12 col-lg-2">
-            <button type="submit" class="btn btn-light-premium w-100">
+            <button
+                type="submit"
+                class="btn btn-light-premium w-100"
+            >
                 <i class="bi bi-funnel"></i>
                 Filtrer
             </button>
         </div>
+
     </form>
 </div>
 
 <div class="premium-panel">
     <div class="table-responsive">
+
         <table class="table premium-table align-middle">
             <thead>
                 <tr>
                     <th>Date</th>
+                    <th>N° du bon</th>
                     <th>Produit</th>
                     <th>Type</th>
                     <th>Quantité</th>
                     <th>Ancien stock</th>
                     <th>Nouveau stock</th>
                     <th>Motif</th>
+                    <th class="text-end">Bon</th>
                 </tr>
             </thead>
 
             <tbody>
                 {% for movement in page_obj %}
                     <tr>
-                        <td>{{ movement.created_at|date:"d/m/Y H:i" }}</td>
-
                         <td>
-                            <strong>{{ movement.product.name }}</strong>
-                            <br>
-                            <small class="text-muted">
-                                Réf : {{ movement.product.reference|default:"-" }}
-                            </small>
+                            {{ movement.created_at|date:"d/m/Y H:i" }}
                         </td>
 
                         <td>
-                            {% if movement.movement_type == "in" %}
-                                <span class="badge badge-paid">Entrée</span>
-                            {% elif movement.movement_type == "out" %}
-                                <span class="badge badge-credit">Sortie</span>
-                            {% elif movement.movement_type == "sale" %}
-                                <span class="badge badge-partial">Vente</span>
-                            {% else %}
-                                <span class="badge badge-cancelled">Correction</span>
+                            <strong>
+                                {% if movement.batch_reference %}
+                                    {{ movement.batch_reference }}
+                                {% else %}
+                                    MVT-{{ movement.pk }}
+                                {% endif %}
+                            </strong>
+
+                            {% if movement.batch_reference %}
+                                <br>
+                                <small class="text-muted">
+                                    Bon multi-ligne
+                                </small>
                             {% endif %}
                         </td>
 
                         <td>
-                            <strong>{{ movement.quantity }} {{ movement.product.unit.short_name }}</strong>
+                            <strong>
+                                {{ movement.product.name }}
+                            </strong>
+
+                            <br>
+
+                            <small class="text-muted">
+                                Réf :
+                                {{ movement.product.reference|default:"-" }}
+                            </small>
+
+                            {% if movement.product.barcode %}
+                                <br>
+                                <small class="text-muted">
+                                    Code-barres :
+                                    {{ movement.product.barcode }}
+                                </small>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if movement.movement_type == "in" %}
+                                <span class="badge badge-paid">
+                                    Entrée
+                                </span>
+                            {% elif movement.movement_type == "out" %}
+                                <span class="badge badge-credit">
+                                    Sortie
+                                </span>
+                            {% elif movement.movement_type == "sale" %}
+                                <span class="badge badge-partial">
+                                    Vente
+                                </span>
+                            {% else %}
+                                <span class="badge badge-cancelled">
+                                    Correction
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ movement.quantity }}
+
+                                {% if movement.product.unit %}
+                                    {{ movement.product.unit.short_name }}
+                                {% endif %}
+                            </strong>
                         </td>
 
                         <td>{{ movement.old_quantity }}</td>
                         <td>{{ movement.new_quantity }}</td>
 
-                        <td>{{ movement.reason|default:"-" }}</td>
+                        <td>
+                            {{ movement.reason|default:"-" }}
+                        </td>
+
+                        <td class="text-end">
+                            {% if movement.movement_type == "in" or movement.movement_type == "out" %}
+
+                                {% if movement.batch_reference %}
+                                    <a
+                                        href="{% url 'stock_movement_batch_print' movement.batch_reference %}"
+                                        class="btn btn-sm btn-light-premium"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Imprimer tout le bon"
+                                    >
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                {% else %}
+                                    <a
+                                        href="{% url 'stock_movement_print' movement.pk %}"
+                                        class="btn btn-sm btn-light-premium"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Imprimer ce mouvement"
+                                    >
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                {% endif %}
+
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
                     </tr>
+
                 {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td
+                            colspan="9"
+                            class="text-center text-muted py-4"
+                        >
                             Aucun mouvement trouvé.
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
+
     </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center mb-0">
+
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                        >
+                            Précédent
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }}
+                        sur {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.next_page_number }}"
+                        >
+                            Suivant
+                        </a>
+                    </li>
+                {% endif %}
+
+            </ul>
+        </nav>
+    {% endif %}
 </div>
 
 {% endblock %}

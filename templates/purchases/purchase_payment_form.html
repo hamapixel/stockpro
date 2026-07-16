@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% load static money_filters %}
+
+{% block title %}Paiement fournisseur{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/purchases.css' %}"
+>
+
+<div class="purchase-module-page">
+
+    <div class="page-header">
+
+        <div>
+            <h3>Paiement fournisseur</h3>
+
+            <p>
+                Achat {{ purchase.purchase_number }}
+            </p>
+        </div>
+
+        <a
+            href="{% url 'purchase_detail' purchase.pk %}"
+            class="btn btn-light-premium"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Retour à l’achat
+        </a>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-xl-5">
+
+            <div class="premium-panel h-100">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>Situation de l’achat</h5>
+
+                        <small>
+                            Vérifiez le reste avant paiement
+                        </small>
+                    </div>
+                </div>
+
+                <div class="quick-list">
+
+                    <div class="quick-row">
+                        <span>Fournisseur</span>
+
+                        <strong>{{ supplier.name }}</strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Total de l’achat</span>
+
+                        <strong>
+                            {{ purchase.total|fcfa }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Déjà payé</span>
+
+                        <strong class="text-success">
+                            {{ purchase.amount_paid|fcfa }}
+                        </strong>
+                    </div>
+
+                    <div class="quick-row">
+                        <span>Reste à payer</span>
+
+                        <strong class="text-danger">
+                            {{ purchase.remaining_amount|fcfa }}
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0">
+                    Le paiement ne peut pas dépasser
+                    le reste dû au fournisseur.
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-xl-7">
+
+            <div class="premium-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h5>Nouveau règlement</h5>
+                        <small>Informations du paiement</small>
+                    </div>
+                </div>
+
+                <form
+                    method="post"
+                    id="supplierPaymentForm"
+                    novalidate
+                >
+
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+
+                            <label
+                                for="{{ form.amount.id_for_label }}"
+                                class="form-label"
+                            >
+                                Montant payé
+                            </label>
+
+                            {{ form.amount }}
+
+                            {% if form.amount.help_text %}
+                                <small class="text-muted d-block mt-1">
+                                    {{ form.amount.help_text }}
+                                </small>
+                            {% endif %}
+
+                            {% for error in form.amount.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                        <div class="col-12 col-md-6">
+
+                            <label
+                                for="{{ form.payment_method.id_for_label }}"
+                                class="form-label"
+                            >
+                                Mode de paiement
+                            </label>
+
+                            {{ form.payment_method }}
+
+                            {% for error in form.payment_method.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                        <div class="col-12 col-md-6">
+
+                            <label
+                                for="{{ form.payment_date.id_for_label }}"
+                                class="form-label"
+                            >
+                                Date du paiement
+                            </label>
+
+                            {{ form.payment_date }}
+
+                            {% for error in form.payment_date.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <label
+                                for="{{ form.notes.id_for_label }}"
+                                class="form-label"
+                            >
+                                Notes
+                            </label>
+
+                            {{ form.notes }}
+
+                            {% for error in form.notes.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <button
+                                type="submit"
+                                id="supplierPaymentButton"
+                                class="btn btn-primary-premium w-100"
+                            >
+                                <i class="bi bi-check-circle"></i>
+                                Enregistrer le paiement
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById(
+        "supplierPaymentForm"
+    );
+
+    const button = document.getElementById(
+        "supplierPaymentButton"
+    );
+
+    if (!form || !button) {
+        return;
+    }
+
+    form.addEventListener("submit", function () {
+        button.disabled = true;
+
+        button.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm"
+                aria-hidden="true"
+            ></span>
+            Enregistrement...
+        `;
+    });
+});
+</script>
+
+{% endblock %}

@@ -8,6 +8,8 @@ from accounts.decorators import seller_or_admin_required
 from payments.models import Payment
 from sales.models import Sale
 
+from .barcodes import generate_code128_data_uri
+
 
 def decimal_sum(queryset, field_name):
     result = queryset.aggregate(
@@ -21,10 +23,12 @@ def decimal_sum(queryset, field_name):
 def document_center(request):
     query = request.GET.get("q", "").strip()
     status = request.GET.get("status", "").strip()
+
     start_date = request.GET.get(
         "start_date",
         "",
     ).strip()
+
     end_date = request.GET.get(
         "end_date",
         "",
@@ -77,6 +81,7 @@ def document_center(request):
     document_count = sales.count()
 
     paginator = Paginator(sales, 15)
+
     page_obj = paginator.get_page(
         request.GET.get("page")
     )
@@ -87,9 +92,7 @@ def document_center(request):
         "status": status,
         "start_date": start_date,
         "end_date": end_date,
-
         "status_choices": Sale.PaymentStatus.choices,
-
         "document_count": document_count,
         "total_sales": total_sales,
         "total_paid": total_paid,
@@ -129,6 +132,9 @@ def sale_invoice(request, sale_pk):
         "items": items,
         "payments": payments,
         "document_title": "Facture",
+        "invoice_barcode": generate_code128_data_uri(
+            sale.sale_number
+        ),
     }
 
     return render(

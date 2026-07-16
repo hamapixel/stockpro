@@ -1,0 +1,111 @@
+{% load static %}
+
+{% if company_settings %}
+
+    {% if company_settings.invoice_header_mode == "image" %}
+
+        <header
+            class="invoice-custom-header"
+            style="--invoice-header-height: {{ company_settings.invoice_header_height_mm }}mm;"
+        >
+            {% if company_settings.invoice_header %}
+                <img
+                    src="{{ company_settings.invoice_header.url }}"
+                    alt="Entête {{ company_settings.company_name }}"
+                >
+            {% else %}
+                <img
+                    src="{% static 'images/msf_invoice_header.jpg' %}"
+                    alt="Entête MSF - SARL"
+                >
+            {% endif %}
+        </header>
+
+    {% else %}
+
+        <header class="invoice-generated-header">
+
+            {% if company_settings.logo and company_settings.show_logo_on_generated_header %}
+
+                <div class="invoice-generated-logo">
+                    <img
+                        src="{{ company_settings.logo.url }}"
+                        alt="{{ company_settings.company_name }}"
+                    >
+                </div>
+
+            {% endif %}
+
+            <div class="invoice-company-main">
+
+                <h1>
+                    {{ company_settings.company_name }}
+                </h1>
+
+                {% if company_settings.legal_name %}
+                    <strong>
+                        {{ company_settings.legal_name }}
+                    </strong>
+                {% endif %}
+
+                {% if company_settings.activity %}
+                    <span>
+                        {{ company_settings.activity }}
+                    </span>
+                {% endif %}
+
+                {% if company_settings.slogan %}
+                    <em>
+                        {{ company_settings.slogan }}
+                    </em>
+                {% endif %}
+
+            </div>
+
+            <div class="invoice-company-contact">
+
+                {% if company_settings.address %}
+                    <div>{{ company_settings.address|linebreaksbr }}</div>
+                {% endif %}
+
+                {% if company_settings.phone %}
+                    <div>
+                        Tél. {{ company_settings.phone }}
+
+                        {% if company_settings.phone_secondary %}
+                            / {{ company_settings.phone_secondary }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if company_settings.email %}
+                    <div>{{ company_settings.email }}</div>
+                {% endif %}
+
+                {% if company_settings.website %}
+                    <div>{{ company_settings.website }}</div>
+                {% endif %}
+
+                {% if company_settings.rccm or company_settings.nif %}
+                    <div>
+                        {% if company_settings.rccm %}
+                            RCCM : {{ company_settings.rccm }}
+                        {% endif %}
+
+                        {% if company_settings.rccm and company_settings.nif %}
+                            •
+                        {% endif %}
+
+                        {% if company_settings.nif %}
+                            NIF : {{ company_settings.nif }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+        </header>
+
+    {% endif %}
+
+{% endif %}

@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+{% load money_filters %}
+
+{% block title %}Achats et approvisionnements{% endblock %}
+
+{% block content %}
+
+<div class="purchase-list-page">
+
+    <!-- =====================================================
+         EN-TÊTE
+    ====================================================== -->
+
+    <div class="page-header">
+
+        <div>
+            <h3>Achats et approvisionnements</h3>
+
+            <p>
+                Gérez les entrées de marchandises,
+                les fournisseurs et les paiements.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a
+                href="{% url 'supplier_list' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-truck"></i>
+                Fournisseurs
+            </a>
+
+            <a
+                href="{% url 'purchase_payment_list' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-cash-stack"></i>
+                Paiements fournisseurs
+            </a>
+
+            <a
+                href="{% url 'purchase_create' %}"
+                class="btn btn-primary-premium"
+            >
+                <i class="bi bi-plus-circle"></i>
+                Nouvel approvisionnement
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         CARTES RÉCAPITULATIVES
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card h-100">
+
+                <div class="mini-icon bg-soft-blue">
+                    <i class="bi bi-receipt"></i>
+                </div>
+
+                <div
+                    class="flex-grow-1"
+                    style="min-width: 0;"
+                >
+                    <span class="d-block text-muted">
+                        Nombre d’achats
+                    </span>
+
+                    <strong
+                        class="d-block fs-4 fw-bold"
+                        style="overflow-wrap: anywhere;"
+                    >
+                        {{ purchase_count }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card h-100">
+
+                <div class="mini-icon bg-soft-purple">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+
+                <div
+                    class="flex-grow-1"
+                    style="min-width: 0;"
+                >
+                    <span class="d-block text-muted">
+                        Total des achats
+                    </span>
+
+                    <strong
+                        class="d-block fs-4 fw-bold"
+                        style="overflow-wrap: anywhere;"
+                    >
+                        {{ total_purchase|fcfa }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card h-100">
+
+                <div class="mini-icon bg-soft-green">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+
+                <div
+                    class="flex-grow-1"
+                    style="min-width: 0;"
+                >
+                    <span class="d-block text-muted">
+                        Montant payé
+                    </span>
+
+                    <strong
+                        class="d-block fs-4 fw-bold text-success"
+                        style="overflow-wrap: anywhere;"
+                    >
+                        {{ total_paid|fcfa }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-md-6">
+
+            <div class="mini-card h-100">
+
+                <div class="mini-icon bg-soft-red">
+                    <i class="bi bi-credit-card-2-back"></i>
+                </div>
+
+                <div
+                    class="flex-grow-1"
+                    style="min-width: 0;"
+                >
+                    <span class="d-block text-muted">
+                        Dette fournisseurs
+                    </span>
+
+                    <strong
+                        class="d-block fs-4 fw-bold text-danger"
+                        style="overflow-wrap: anywhere;"
+                    >
+                        {{ total_remaining|fcfa }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         FILTRES
+    ====================================================== -->
+
+    <div class="premium-panel mb-4">
+
+        <div class="panel-header">
+
+            <div>
+                <h5>Rechercher un achat</h5>
+
+                <small>
+                    Filtrez par fournisseur, statut ou période
+                </small>
+            </div>
+
+        </div>
+
+        <form
+            method="get"
+            class="row g-3"
+        >
+
+            <div class="col-12 col-lg-4">
+
+                <label
+                    for="purchaseSearch"
+                    class="form-label"
+                >
+                    Recherche
+                </label>
+
+                <input
+                    type="search"
+                    id="purchaseSearch"
+                    name="q"
+                    value="{{ query }}"
+                    class="form-control premium-search"
+                    placeholder="N° achat, fournisseur, référence..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+
+                <label
+                    for="supplierFilter"
+                    class="form-label"
+                >
+                    Fournisseur
+                </label>
+
+                <select
+                    id="supplierFilter"
+                    name="supplier"
+                    class="form-select"
+                >
+                    <option value="">
+                        Tous les fournisseurs
+                    </option>
+
+                    {% for supplier in suppliers %}
+
+                        <option
+                            value="{{ supplier.pk }}"
+                            {% if supplier_id == supplier.pk|stringformat:"s" %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ supplier.name }}
+                        </option>
+
+                    {% endfor %}
+                </select>
+
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+
+                <label
+                    for="statusFilter"
+                    class="form-label"
+                >
+                    Statut
+                </label>
+
+                <select
+                    id="statusFilter"
+                    name="status"
+                    class="form-select"
+                >
+                    <option value="">
+                        Tous les statuts
+                    </option>
+
+                    {% for value, label in status_choices %}
+
+                        <option
+                            value="{{ value }}"
+                            {% if payment_status == value %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ label }}
+                        </option>
+
+                    {% endfor %}
+                </select>
+
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+
+                <label
+                    for="startDate"
+                    class="form-label"
+                >
+                    Date début
+                </label>
+
+                <input
+                    type="date"
+                    id="startDate"
+                    name="start_date"
+                    value="{{ start_date }}"
+                    class="form-control"
+                >
+
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+
+                <label
+                    for="endDate"
+                    class="form-label"
+                >
+                    Date fin
+                </label>
+
+                <input
+                    type="date"
+                    id="endDate"
+                    name="end_date"
+                    value="{{ end_date }}"
+                    class="form-control"
+                >
+
+            </div>
+
+            <div
+                class="col-12 col-lg-4 d-flex align-items-end"
+            >
+
+                <div class="d-flex gap-2 w-100">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary-premium flex-grow-1"
+                    >
+                        <i class="bi bi-funnel"></i>
+                        Filtrer
+                    </button>
+
+                    <a
+                        href="{% url 'purchase_list' %}"
+                        class="btn btn-light-premium"
+                        title="Réinitialiser les filtres"
+                    >
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- =====================================================
+         TABLEAU DES ACHATS
+    ====================================================== -->
+
+    <div class="premium-panel">
+
+        <div class="panel-header">
+
+            <div>
+                <h5>Historique des achats</h5>
+
+                <small>
+                    {{ purchase_count }} achat{{ purchase_count|pluralize }}
+                    trouvé{{ purchase_count|pluralize }}
+                </small>
+            </div>
+
+            <a
+                href="{% url 'purchase_create' %}"
+                class="btn btn-sm btn-primary-premium"
+            >
+                <i class="bi bi-plus-lg"></i>
+                Ajouter
+            </a>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table premium-table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>N° achat</th>
+                        <th>Fournisseur</th>
+                        <th>Total</th>
+                        <th>Payé</th>
+                        <th>Reste</th>
+                        <th>Statut</th>
+                        <th>Créé par</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for purchase in page_obj %}
+
+                        <tr>
+
+                            <td>
+                                {{ purchase.purchase_date|date:"d/m/Y H:i" }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ purchase.purchase_number }}
+                                </strong>
+
+                                {% if purchase.supplier_reference %}
+                                    <br>
+
+                                    <small class="text-muted">
+                                        Réf. :
+                                        {{ purchase.supplier_reference }}
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a
+                                    href="{% url 'supplier_detail' purchase.supplier.pk %}"
+                                    class="text-decoration-none fw-semibold"
+                                >
+                                    {{ purchase.supplier.name }}
+                                </a>
+
+                                {% if purchase.supplier.phone %}
+                                    <br>
+
+                                    <small class="text-muted">
+                                        {{ purchase.supplier.phone }}
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <strong class="text-nowrap">
+                                    {{ purchase.total|fcfa }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="text-success fw-bold text-nowrap">
+                                    {{ purchase.amount_paid|fcfa }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="text-danger fw-bold text-nowrap">
+                                    {{ purchase.remaining_amount|fcfa }}
+                                </span>
+                            </td>
+
+                            <td>
+
+                                {% if purchase.is_cancelled %}
+
+                                    <span class="badge badge-cancelled">
+                                        Annulé
+                                    </span>
+
+                                {% elif purchase.payment_status == "paid" %}
+
+                                    <span class="badge badge-paid">
+                                        Payé
+                                    </span>
+
+                                {% elif purchase.payment_status == "partial" %}
+
+                                    <span class="badge badge-partial">
+                                        Partiel
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge badge-credit">
+                                        Crédit
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {% if purchase.created_by %}
+                                    {{ purchase.created_by.username }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+
+                                <a
+                                    href="{% url 'purchase_detail' purchase.pk %}"
+                                    class="btn btn-sm btn-light-premium"
+                                    title="Voir l’achat"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td
+                                colspan="9"
+                                class="text-center text-muted py-5"
+                            >
+                                <div class="empty-state">
+
+                                    <i class="bi bi-bag-x"></i>
+
+                                    <p class="mb-2">
+                                        Aucun achat trouvé.
+                                    </p>
+
+                                    <a
+                                        href="{% url 'purchase_create' %}"
+                                        class="btn btn-primary-premium"
+                                    >
+                                        Créer un approvisionnement
+                                    </a>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- =================================================
+             PAGINATION
+        ================================================== -->
+
+        {% if page_obj.paginator.num_pages > 1 %}
+
+            <div
+                class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4"
+            >
+
+                <small class="text-muted">
+                    Page {{ page_obj.number }}
+                    sur {{ page_obj.paginator.num_pages }}
+                </small>
+
+                <nav aria-label="Pagination des achats">
+
+                    <ul class="pagination mb-0">
+
+                        {% if page_obj.has_previous %}
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?q={{ query|urlencode }}&supplier={{ supplier_id }}&status={{ payment_status }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ page_obj.previous_page_number }}"
+                                >
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+
+                            </li>
+
+                        {% else %}
+
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    <i class="bi bi-chevron-left"></i>
+                                </span>
+                            </li>
+
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ page_obj.number }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?q={{ query|urlencode }}&supplier={{ supplier_id }}&status={{ payment_status }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ page_obj.next_page_number }}"
+                                >
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+
+                            </li>
+
+                        {% else %}
+
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+                            </li>
+
+                        {% endif %}
+
+                    </ul>
+
+                </nav>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

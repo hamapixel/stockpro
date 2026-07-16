@@ -31,6 +31,8 @@ urlpatterns = [
     path("caisse/", include("cashbox.urls")),
     path("documents/", include("documents.urls")),
     path("rapports/", include("reports.urls")),
+    path("achats/",include("purchases.urls"),),
+    path( "parametres/",include("configuration.urls"),),
 ]
 
 
