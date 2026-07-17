@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+{% load static money_filters %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/proformas_pos.css' %}"
+>
+
+<div class="proforma-pos-page">
+
+    <div class="page-header">
+        <div>
+            <h3>{{ page_title }}</h3>
+
+            <p>
+                Cliquez directement sur les produits pour les
+                ajouter à la proforma. Aucun menu de sélection.
+            </p>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            {% if proforma %}
+                <a
+                    href="{% url 'proforma_detail' proforma.pk %}"
+                    class="btn btn-light-premium"
+                >
+                    <i class="bi bi-arrow-left"></i>
+                    Retour
+                </a>
+            {% else %}
+                <a
+                    href="{% url 'proforma_list' %}"
+                    class="btn btn-light-premium"
+                >
+                    <i class="bi bi-arrow-left"></i>
+                    Proformas
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form
+        method="post"
+        id="proformaPosForm"
+        data-products-url="{% url 'proforma_product_search_api' %}"
+        novalidate
+    >
+        {% csrf_token %}
+
+        <input
+            type="hidden"
+            name="submission_token"
+            value="{{ submission_token }}"
+        >
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="proforma-pos-panel mb-3">
+
+            <div class="proforma-pos-section-header">
+                <div>
+                    <h5>Informations de la proforma</h5>
+                    <small>
+                        Client, date, validité et statut.
+                    </small>
+                </div>
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label
+                        class="form-label"
+                        for="{{ form.client.id_for_label }}"
+                    >
+                        {{ form.client.label }}
+                    </label>
+
+                    {{ form.client }}
+
+                    {% for error in form.client.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label
+                        class="form-label"
+                        for="{{ form.status.id_for_label }}"
+                    >
+                        {{ form.status.label }}
+                    </label>
+
+                    {{ form.status }}
+
+                    {% for error in form.status.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label
+                        class="form-label"
+                        for="{{ form.proforma_date.id_for_label }}"
+                    >
+                        {{ form.proforma_date.label }}
+                    </label>
+
+                    {{ form.proforma_date }}
+
+                    {% for error in form.proforma_date.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label
+                        class="form-label"
+                        for="{{ form.valid_until.id_for_label }}"
+                    >
+                        {{ form.valid_until.label }}
+                    </label>
+
+                    {{ form.valid_until }}
+
+                    {% for error in form.valid_until.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+        </section>
+
+        <div class="proforma-pos-layout">
+
+            <!-- ==========================================
+                 CATALOGUE DE PRODUITS
+            =========================================== -->
+
+            <section class="proforma-pos-panel proforma-catalog">
+
+                <div class="proforma-pos-section-header">
+                    <div>
+                        <h5>Produits disponibles</h5>
+
+                        <small>
+                            Cliquez sur une carte pour ajouter
+                            le produit au panier.
+                        </small>
+                    </div>
+
+                    <span
+                        id="productCountBadge"
+                        class="proforma-count-badge"
+                    >
+                        Chargement...
+                    </span>
+                </div>
+
+                <div class="proforma-catalog-toolbar">
+
+                    <div class="proforma-catalog-search">
+                        <i class="bi bi-search"></i>
+
+                        <input
+                            type="search"
+                            id="proformaProductSearch"
+                            class="form-control"
+                            placeholder="Rechercher par nom, référence ou code-barres..."
+                            autocomplete="off"
+                        >
+
+                        <button
+                            type="button"
+                            id="clearProductSearch"
+                            class="proforma-clear-search"
+                            title="Effacer la recherche"
+                        >
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <select
+                        id="proformaCategoryFilter"
+                        class="form-select proforma-category-filter"
+                    >
+                        <option value="">
+                            Toutes les catégories
+                        </option>
+                    </select>
+
+                </div>
+
+                <div
+                    id="proformaProductsLoader"
+                    class="proforma-products-state"
+                >
+                    <div class="spinner-border" role="status"></div>
+
+                    <span>
+                        Chargement des produits...
+                    </span>
+                </div>
+
+                <div
+                    id="proformaProductsEmpty"
+                    class="proforma-products-state d-none"
+                >
+                    <i class="bi bi-search"></i>
+
+                    <strong>
+                        Aucun produit trouvé
+                    </strong>
+
+                    <span>
+                        Modifiez la recherche ou réinitialisez
+                        les filtres.
+                    </span>
+                </div>
+
+                <div
+                    id="proformaProductGrid"
+                    class="proforma-product-grid"
+                ></div>
+
+                <div
+                    id="proformaLoadMoreWrap"
+                    class="d-none text-center mt-4"
+                >
+                    <button
+                        type="button"
+                        id="proformaLoadMore"
+                        class="btn btn-light-premium px-4"
+                    >
+                        <i class="bi bi-arrow-down-circle"></i>
+                        Charger plus de produits
+                    </button>
+                </div>
+
+            </section>
+
+            <!-- ==========================================
+                 PANIER PROFORMA
+            =========================================== -->
+
+            <aside class="proforma-pos-panel proforma-cart">
+
+                <div class="proforma-pos-section-header">
+                    <div>
+                        <h5>Produits ajoutés</h5>
+
+                        <small>
+                            Modifiez quantité, prix ou remise.
+                        </small>
+                    </div>
+
+                    <span
+                        id="proformaCartCount"
+                        class="proforma-count-badge"
+                    >
+                        0 ligne
+                    </span>
+                </div>
+
+                <div
+                    id="proformaCartEmpty"
+                    class="proforma-cart-empty"
+                >
+                    <div class="proforma-cart-empty-icon">
+                        <i class="bi bi-cart-plus"></i>
+                    </div>
+
+                    <strong>
+                        Aucun produit ajouté
+                    </strong>
+
+                    <span>
+                        Cliquez sur les produits affichés
+                        à gauche.
+                    </span>
+                </div>
+
+                <div
+                    id="proformaCartLines"
+                    class="proforma-cart-lines"
+                >
+                    {% for row in posted_rows %}
+                        {% if row.product_id or row.product_label or row.quantity or row.unit_price or row.line_discount %}
+                            <article
+                                class="proforma-cart-line"
+                                data-product-id="{{ row.product_id }}"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="product"
+                                    value="{{ row.product_id }}"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="product_label"
+                                    value="{{ row.product_label }}"
+                                >
+
+                                <div class="proforma-cart-line-top">
+
+                                    <div class="proforma-cart-product-icon">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+
+                                    <div class="proforma-cart-product-name">
+                                        <strong class="js-product-name">
+                                            {{ row.product_label|default:"Produit" }}
+                                        </strong>
+
+                                        <span class="js-product-meta">
+                                            Produit déjà ajouté
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="btn proforma-cart-remove js-remove-line"
+                                        title="Supprimer"
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+
+                                </div>
+
+                                <div class="proforma-cart-fields">
+
+                                    <div>
+                                        <label>Quantité</label>
+
+                                        <input
+                                            type="number"
+                                            name="quantity"
+                                            value="{{ row.quantity }}"
+                                            min="0.01"
+                                            step="0.01"
+                                            class="form-control js-quantity"
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label>Prix unitaire</label>
+
+                                        <input
+                                            type="number"
+                                            name="unit_price"
+                                            value="{{ row.unit_price }}"
+                                            min="0"
+                                            step="0.01"
+                                            class="form-control js-unit-price"
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label>Remise</label>
+
+                                        <input
+                                            type="number"
+                                            name="line_discount"
+                                            value="{{ row.line_discount }}"
+                                            min="0"
+                                            step="0.01"
+                                            class="form-control js-line-discount"
+                                        >
+                                    </div>
+
+                                </div>
+
+                                <div class="proforma-cart-line-total">
+                                    <span>Montant de la ligne</span>
+
+                                    <strong class="js-line-total">
+                                        0 F CFA
+                                    </strong>
+                                </div>
+
+                            </article>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="proforma-cart-options">
+
+                    <div>
+                        <label
+                            class="form-label"
+                            for="{{ form.discount.id_for_label }}"
+                        >
+                            {{ form.discount.label }}
+                        </label>
+
+                        {{ form.discount }}
+
+                        {% for error in form.discount.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label
+                            class="form-label"
+                            for="{{ form.notes.id_for_label }}"
+                        >
+                            {{ form.notes.label }}
+                        </label>
+
+                        {{ form.notes }}
+
+                        {% for error in form.notes.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label
+                            class="form-label"
+                            for="{{ form.terms.id_for_label }}"
+                        >
+                            {{ form.terms.label }}
+                        </label>
+
+                        {{ form.terms }}
+
+                        {% for error in form.terms.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <div class="proforma-cart-summary">
+
+                    <div>
+                        <span>Sous-total</span>
+
+                        <strong id="proformaSubtotal">
+                            0 F CFA
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Remise globale</span>
+
+                        <strong id="proformaGlobalDiscount">
+                            0 F CFA
+                        </strong>
+                    </div>
+
+                    <div class="proforma-cart-grand-total">
+                        <span>Total net</span>
+
+                        <strong id="proformaTotal">
+                            0 F CFA
+                        </strong>
+                    </div>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary-premium w-100 proforma-submit-button"
+                >
+                    <i class="bi bi-check-circle"></i>
+                    {{ submit_label }}
+                </button>
+
+                <p class="proforma-stock-note">
+                    <i class="bi bi-info-circle"></i>
+
+                    La proforma ne diminue pas le stock.
+                    Le stock est modifié uniquement lors
+                    de la conversion en vente.
+                </p>
+
+            </aside>
+
+        </div>
+
+    </form>
+
+</div>
+
+<template id="proformaProductCardTemplate">
+    <button
+        type="button"
+        class="proforma-product-card"
+    >
+        <div class="proforma-product-image">
+            <img
+                class="js-card-image"
+                src=""
+                alt=""
+                loading="lazy"
+                decoding="async"
+            >
+
+            <div class="proforma-product-image-fallback">
+                <i class="bi bi-box-seam"></i>
+            </div>
+
+            <span class="proforma-product-stock js-card-stock"></span>
+        </div>
+
+        <div class="proforma-product-content">
+            <span class="proforma-product-category js-card-category"></span>
+
+            <strong class="js-card-name"></strong>
+
+            <small class="js-card-reference"></small>
+
+            <div class="proforma-product-card-footer">
+                <span class="js-card-price"></span>
+
+                <span class="proforma-add-label">
+                    <i class="bi bi-plus-circle"></i>
+                    Ajouter
+                </span>
+            </div>
+        </div>
+    </button>
+</template>
+
+<template id="proformaCartLineTemplate">
+    <article
+        class="proforma-cart-line"
+        data-product-id=""
+    >
+        <input
+            type="hidden"
+            name="product"
+            value=""
+        >
+
+        <input
+            type="hidden"
+            name="product_label"
+            value=""
+        >
+
+        <div class="proforma-cart-line-top">
+
+            <div class="proforma-cart-product-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+
+            <div class="proforma-cart-product-name">
+                <strong class="js-product-name"></strong>
+
+                <span class="js-product-meta"></span>
+            </div>
+
+            <button
+                type="button"
+                class="btn proforma-cart-remove js-remove-line"
+                title="Supprimer"
+            >
+                <i class="bi bi-trash"></i>
+            </button>
+
+        </div>
+
+        <div class="proforma-cart-fields">
+
+            <div>
+                <label>Quantité</label>
+
+                <input
+                    type="number"
+                    name="quantity"
+                    value="1"
+                    min="0.01"
+                    step="0.01"
+                    class="form-control js-quantity"
+                >
+            </div>
+
+            <div>
+                <label>Prix unitaire</label>
+
+                <input
+                    type="number"
+                    name="unit_price"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    class="form-control js-unit-price"
+                >
+            </div>
+
+            <div>
+                <label>Remise</label>
+
+                <input
+                    type="number"
+                    name="line_discount"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    class="form-control js-line-discount"
+                >
+            </div>
+
+        </div>
+
+        <div class="proforma-cart-line-total">
+            <span>Montant de la ligne</span>
+
+            <strong class="js-line-total">
+                0 F CFA
+            </strong>
+        </div>
+
+    </article>
+</template>
+
+<script src="{% static 'js/proforma.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% load static money_filters %}
+
+{% block title %}
+    {{ proforma.proforma_number }}
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/proformas.css' %}"
+>
+
+<div class="proforma-page">
+
+    <div class="page-header">
+        <div>
+            <h3>
+                {{ proforma.proforma_number }}
+            </h3>
+
+            <p>
+                Détail complet de la proforma
+                et de ses produits.
+            </p>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+
+            <a
+                href="{% url 'proforma_list' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Proformas
+            </a>
+
+            <a
+                href="{% url 'proforma_print' proforma.pk %}"
+                class="btn btn-light-premium"
+                target="_blank"
+                rel="noopener"
+            >
+                <i class="bi bi-printer"></i>
+                Imprimer
+            </a>
+
+            {% if proforma.can_be_modified %}
+                <a
+                    href="{% url 'proforma_update' proforma.pk %}"
+                    class="btn btn-primary-premium"
+                >
+                    <i class="bi bi-pencil"></i>
+                    Modifier
+                </a>
+            {% endif %}
+
+            <form
+                method="post"
+                action="{% url 'proforma_duplicate' proforma.pk %}"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="btn btn-light-premium"
+                >
+                    <i class="bi bi-copy"></i>
+                    Dupliquer
+                </button>
+            </form>
+
+            {% if proforma.can_be_converted %}
+                <form
+                    method="post"
+                    action="{% url 'proforma_convert' proforma.pk %}"
+                    onsubmit="return confirm('Convertir cette proforma en vente à crédit et diminuer le stock ?');"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary-premium"
+                    >
+                        <i class="bi bi-cart-check"></i>
+                        Convertir en vente
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if proforma.can_be_modified %}
+                <form
+                    method="post"
+                    action="{% url 'proforma_cancel' proforma.pk %}"
+                    onsubmit="return confirm('Annuler cette proforma ?');"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger-premium"
+                    >
+                        <i class="bi bi-x-circle"></i>
+                        Annuler
+                    </button>
+                </form>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Sous-total</span>
+
+                <strong>
+                    {{ proforma.subtotal|fcfa }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Remise globale</span>
+
+                <strong>
+                    {{ proforma.discount|fcfa }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Total net</span>
+
+                <strong class="text-success">
+                    {{ proforma.total|fcfa }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Statut</span>
+
+                <strong>
+                    <span
+                        class="proforma-status proforma-status-{{ proforma.status }}"
+                    >
+                        {{ proforma.get_status_display }}
+                    </span>
+                </strong>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="proforma-detail-grid mb-4">
+
+        <div class="proforma-info-box">
+            <span>Client</span>
+
+            {% if proforma.client %}
+                <strong>
+                    {{ proforma.client.full_name }}
+                </strong>
+
+                <p class="mb-0 mt-2 text-muted">
+                    {{ proforma.client.phone|default:"Téléphone non renseigné" }}
+                    {% if proforma.client.address %}
+                        <br>
+                        {{ proforma.client.address }}
+                    {% endif %}
+                </p>
+            {% else %}
+                <strong>-</strong>
+            {% endif %}
+        </div>
+
+        <div class="proforma-info-box">
+            <span>Dates</span>
+
+            <strong>
+                Créée le
+                {{ proforma.proforma_date|date:"d/m/Y H:i" }}
+            </strong>
+
+            <p class="mb-0 mt-2 text-muted">
+                Valable jusqu’au
+                {{ proforma.valid_until|date:"d/m/Y" }}
+
+                {% if proforma.is_expired %}
+                    <span class="text-danger">
+                        — expirée
+                    </span>
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="proforma-info-box">
+            <span>Créée par</span>
+
+            <strong>
+                {% if proforma.created_by %}
+                    {{ proforma.created_by.username }}
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </div>
+
+        <div class="proforma-info-box">
+            <span>Vente liée</span>
+
+            {% if proforma.converted_sale %}
+                <a
+                    href="{% url 'sale_detail' proforma.converted_sale.pk %}"
+                    class="fw-bold"
+                >
+                    {{ proforma.converted_sale.sale_number }}
+                </a>
+            {% else %}
+                <strong>
+                    Non convertie
+                </strong>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="premium-panel mb-4">
+
+        <div class="panel-header">
+            <div>
+                <h5>Produits proposés</h5>
+
+                <small>
+                    Chaque produit est affiché
+                    sur une ligne distincte.
+                </small>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table premium-table align-middle">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Produit</th>
+                        <th>Référence</th>
+                        <th>Code-barres</th>
+                        <th class="text-end">Quantité</th>
+                        <th class="text-end">PU</th>
+                        <th class="text-end">Remise</th>
+                        <th class="text-end">Montant</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>
+                                <strong>
+                                    {{ item.product.name }}
+                                </strong>
+
+                                {% if item.product.category %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ item.product.category.name }}
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ item.product.reference|default:"-" }}
+                            </td>
+
+                            <td>
+                                {{ item.product.barcode|default:"-" }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ item.quantity }}
+
+                                {% if item.product.unit %}
+                                    {{ item.product.unit.short_name }}
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                {{ item.unit_price|fcfa }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ item.discount|fcfa }}
+                            </td>
+
+                            <td class="text-end">
+                                <strong>
+                                    {{ item.total_line|fcfa }}
+                                </strong>
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td
+                                colspan="8"
+                                class="text-center text-muted py-4"
+                            >
+                                Aucun produit.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <div class="proforma-detail-grid">
+
+        <div class="proforma-info-box">
+            <span>Notes</span>
+
+            <p class="mb-0">
+                {{ proforma.notes|default:"Aucune note."|linebreaksbr }}
+            </p>
+        </div>
+
+        <div class="proforma-info-box">
+            <span>Conditions commerciales</span>
+
+            <p class="mb-0">
+                {{ proforma.terms|default:"-"|linebreaksbr }}
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

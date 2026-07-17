@@ -4,11 +4,9 @@ from io import BytesIO
 
 def generate_code128_data_uri(value):
     """
-    Génère un code-barres Code 128 au format SVG encodé
-    directement dans la page HTML.
-
-    La fonction retourne une chaîne vide lorsque la
-    bibliothèque python-barcode n'est pas installée.
+    Génère un code-barres Code 128 au format SVG.
+    Retourne une chaîne vide si python-barcode
+    n’est pas encore installé.
     """
     cleaned_value = str(value or "").strip()
 
@@ -48,6 +46,4 @@ def generate_code128_data_uri(value):
         )
 
     except Exception:
-        # Le document reste utilisable même si la
-        # bibliothèque n'est pas encore installée.
         return ""

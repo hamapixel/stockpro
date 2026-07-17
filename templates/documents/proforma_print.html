@@ -1,0 +1,529 @@
+{% load static money_filters %}
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Proforma {{ proforma.proforma_number }}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/invoice_company.css' %}"
+    >
+
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #eef2f7;
+            color: #111827;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .print-actions {
+            width: 100%;
+            max-width: 210mm;
+            margin: 14px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #111827;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow:
+                0 8px 18px
+                rgba(15, 23, 42, 0.10);
+        }
+
+        .print-actions button {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 20px;
+            padding: 10mm;
+            background: #ffffff;
+            box-shadow:
+                0 20px 50px
+                rgba(15, 23, 42, 0.12);
+        }
+
+        .title-row {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 18px;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .title-row h1 {
+            margin: 0;
+            font-size: 26px;
+            text-transform: uppercase;
+        }
+
+        .title-row p {
+            margin: 5px 0 0;
+            color: #64748b;
+        }
+
+        .barcode-block {
+            width: 72mm;
+            max-width: 100%;
+            text-align: center;
+        }
+
+        .barcode-block img {
+            width: 100%;
+            height: 15mm;
+            display: block;
+            object-fit: contain;
+        }
+
+        .barcode-block small {
+            display: block;
+            margin-top: 2px;
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+
+        .info-grid {
+            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .info-box {
+            padding: 12px;
+            border: 1px solid #dbe3ef;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .info-box span {
+            display: block;
+            margin-bottom: 6px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .info-box p {
+            margin: 4px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        th {
+            padding: 8px 6px;
+            background: #111827;
+            color: #ffffff;
+            text-align: left;
+            font-size: 9px;
+        }
+
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .text-end {
+            text-align: right;
+        }
+
+        .totals {
+            width: 48%;
+            margin-top: 18px;
+            margin-left: auto;
+            overflow: hidden;
+            border: 1px solid #dbe3ef;
+            border-radius: 12px;
+        }
+
+        .total-row {
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .total-row:last-child {
+            border-bottom: 0;
+        }
+
+        .total-row.final {
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .notes-grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .notes-box {
+            padding: 12px;
+            border: 1px solid #dbe3ef;
+            border-radius: 12px;
+        }
+
+        .notes-box h4 {
+            margin: 0 0 7px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .notes-box p {
+            margin: 0;
+            color: #475467;
+            line-height: 1.55;
+            white-space: pre-line;
+        }
+
+        .signatures {
+            margin-top: 45px;
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .signature {
+            width: 43%;
+            padding-top: 35px;
+            border-top: 1px solid #111827;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .sheet {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+
+            .title-row,
+            .info-box,
+            .totals,
+            .notes-box,
+            .signatures {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="print-actions">
+    <a
+        href="{% url 'proforma_detail' proforma.pk %}"
+    >
+        Retour
+    </a>
+
+    <button
+        type="button"
+        onclick="window.print();"
+    >
+        Imprimer
+    </button>
+</div>
+
+<main class="sheet">
+
+    {% include "documents/partials/company_header.html" %}
+
+    <div class="title-row">
+        <div>
+            <h1>Facture proforma</h1>
+
+            <p>
+                N° {{ proforma.proforma_number }}
+            </p>
+        </div>
+
+        <div class="barcode-block">
+            {% if proforma_barcode %}
+                <img
+                    src="{{ proforma_barcode }}"
+                    alt="Code-barres {{ proforma.proforma_number }}"
+                >
+            {% endif %}
+
+            <small>
+                {{ proforma.proforma_number }}
+            </small>
+        </div>
+    </div>
+
+    <div class="info-grid">
+
+        <div class="info-box">
+            <span>Client</span>
+
+            {% if proforma.client %}
+                <p>
+                    <strong>
+                        {{ proforma.client.full_name }}
+                    </strong>
+                </p>
+
+                <p>
+                    Tél :
+                    {{ proforma.client.phone|default:"-" }}
+                </p>
+
+                {% if proforma.client.address %}
+                    <p>
+                        Adresse :
+                        {{ proforma.client.address }}
+                    </p>
+                {% endif %}
+            {% else %}
+                <p>-</p>
+            {% endif %}
+        </div>
+
+        <div class="info-box">
+            <span>Proforma</span>
+
+            <p>
+                <strong>Date :</strong>
+                {{ proforma.proforma_date|date:"d/m/Y H:i" }}
+            </p>
+
+            <p>
+                <strong>Valable jusqu’au :</strong>
+                {{ proforma.valid_until|date:"d/m/Y" }}
+            </p>
+
+            <p>
+                <strong>Statut :</strong>
+                {{ proforma.get_status_display }}
+            </p>
+        </div>
+
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 4%;">N°</th>
+                <th style="width: 27%;">Produit</th>
+                <th style="width: 12%;">Référence</th>
+                <th style="width: 13%;">Code-barres</th>
+                <th
+                    class="text-end"
+                    style="width: 10%;"
+                >
+                    Quantité
+                </th>
+                <th
+                    class="text-end"
+                    style="width: 12%;"
+                >
+                    PU
+                </th>
+                <th
+                    class="text-end"
+                    style="width: 10%;"
+                >
+                    Remise
+                </th>
+                <th
+                    class="text-end"
+                    style="width: 12%;"
+                >
+                    Montant
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in items %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+
+                    <td>
+                        <strong>
+                            {{ item.product.name }}
+                        </strong>
+
+                        {% if item.product.category %}
+                            <br>
+                            <small>
+                                {{ item.product.category.name }}
+                            </small>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ item.product.reference|default:"-" }}
+                    </td>
+
+                    <td>
+                        {{ item.product.barcode|default:"-" }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ item.quantity }}
+
+                        {% if item.product.unit %}
+                            {{ item.product.unit.short_name }}
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        {{ item.unit_price|fcfa }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ item.discount|fcfa }}
+                    </td>
+
+                    <td class="text-end">
+                        <strong>
+                            {{ item.total_line|fcfa }}
+                        </strong>
+                    </td>
+                </tr>
+
+            {% empty %}
+                <tr>
+                    <td colspan="8">
+                        Aucun produit.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+
+        <div class="total-row">
+            <span>Sous-total</span>
+
+            <strong>
+                {{ proforma.subtotal|fcfa }}
+            </strong>
+        </div>
+
+        <div class="total-row">
+            <span>Remise globale</span>
+
+            <strong>
+                {{ proforma.discount|fcfa }}
+            </strong>
+        </div>
+
+        <div class="total-row final">
+            <span>Total net</span>
+
+            <strong>
+                {{ proforma.total|fcfa }}
+            </strong>
+        </div>
+
+    </div>
+
+    <div class="notes-grid">
+
+        <div class="notes-box">
+            <h4>Notes</h4>
+
+            <p>
+                {{ proforma.notes|default:"Aucune note." }}
+            </p>
+        </div>
+
+        <div class="notes-box">
+            <h4>Conditions commerciales</h4>
+
+            <p>
+                {{ proforma.terms|default:"-" }}
+            </p>
+        </div>
+
+    </div>
+
+    <div class="signatures">
+        <div class="signature">
+            Signature client
+        </div>
+
+        <div class="signature">
+            Signature vendeur
+        </div>
+    </div>
+
+    {% include "documents/partials/company_footer.html" %}
+
+</main>
+
+</body>
+</html>

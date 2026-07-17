@@ -21,11 +21,11 @@ DEBUG = config(
     cast=bool,
 )
 
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="127.0.0.1,localhost",
-    cast=Csv(),
-)
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "10.219.184.120",
+]
 
 
 INSTALLED_APPS = [

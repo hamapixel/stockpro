@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% load static money_filters %}
+
+{% block title %}Proformas{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/proformas.css' %}"
+>
+
+<div class="proforma-page">
+
+    <div class="page-header">
+        <div>
+            <h3>Proformas</h3>
+
+            <p>
+                Créez, imprimez et transformez
+                vos devis proforma multi-lignes.
+            </p>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a
+                href="{% url 'proforma_create' %}"
+                class="btn btn-primary-premium"
+            >
+                <i class="bi bi-file-earmark-plus"></i>
+                Nouvelle proforma
+            </a>
+
+            <a
+                href="{% url 'document_center' %}"
+                class="btn btn-light-premium"
+            >
+                <i class="bi bi-folder2-open"></i>
+                Documents
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Nombre de proformas</span>
+                <strong>{{ proforma_count }}</strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Montant cumulé</span>
+                <strong>
+                    {{ total_amount|fcfa }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Brouillons</span>
+                <strong>{{ draft_count }}</strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="proforma-stat-card">
+                <span>Expirées</span>
+                <strong class="text-danger">
+                    {{ expired_count }}
+                </strong>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="premium-panel mb-3">
+        <form method="get" class="row g-2">
+
+            <div class="col-12 col-lg-4">
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ query }}"
+                    class="form-control premium-search"
+                    placeholder="N° proforma, client ou téléphone..."
+                >
+            </div>
+
+            <div class="col-12 col-lg-2">
+                <select
+                    name="status"
+                    class="form-select"
+                >
+                    <option value="">
+                        Tous les statuts
+                    </option>
+
+                    {% for value, label in status_choices %}
+                        <option
+                            value="{{ value }}"
+                            {% if status == value %}selected{% endif %}
+                        >
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-lg-2">
+                <input
+                    type="date"
+                    name="start_date"
+                    value="{{ start_date }}"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-12 col-lg-2">
+                <input
+                    type="date"
+                    name="end_date"
+                    value="{{ end_date }}"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-12 col-lg-2">
+                <button
+                    type="submit"
+                    class="btn btn-light-premium w-100"
+                >
+                    <i class="bi bi-funnel"></i>
+                    Filtrer
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="premium-panel">
+        <div class="table-responsive">
+
+            <table class="table premium-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>N° proforma</th>
+                        <th>Client</th>
+                        <th>Produits</th>
+                        <th>Validité</th>
+                        <th>Statut</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for proforma in page_obj %}
+                        <tr>
+                            <td>
+                                {{ proforma.proforma_date|date:"d/m/Y H:i" }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ proforma.proforma_number }}
+                                </strong>
+
+                                {% if proforma.converted_sale %}
+                                    <br>
+                                    <small class="text-muted">
+                                        Vente :
+                                        {{ proforma.converted_sale.sale_number }}
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if proforma.client %}
+                                    <strong>
+                                        {{ proforma.client.full_name }}
+                                    </strong>
+
+                                    {% if proforma.client.phone %}
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ proforma.client.phone }}
+                                        </small>
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ proforma.item_count }}
+                            </td>
+
+                            <td>
+                                {{ proforma.valid_until|date:"d/m/Y" }}
+
+                                {% if proforma.is_expired %}
+                                    <br>
+                                    <small class="text-danger">
+                                        Expirée
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span
+                                    class="proforma-status proforma-status-{{ proforma.status }}"
+                                >
+                                    {{ proforma.get_status_display }}
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <strong>
+                                    {{ proforma.total|fcfa }}
+                                </strong>
+                            </td>
+
+                            <td class="text-end">
+                                <div
+                                    class="d-inline-flex gap-1 flex-wrap justify-content-end"
+                                >
+                                    <a
+                                        href="{% url 'proforma_detail' proforma.pk %}"
+                                        class="btn btn-sm btn-light-premium"
+                                        title="Consulter"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    <a
+                                        href="{% url 'proforma_print' proforma.pk %}"
+                                        class="btn btn-sm btn-light-premium"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Imprimer"
+                                    >
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+
+                                    {% if proforma.can_be_modified %}
+                                        <a
+                                            href="{% url 'proforma_update' proforma.pk %}"
+                                            class="btn btn-sm btn-light-premium"
+                                            title="Modifier"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td
+                                colspan="8"
+                                class="text-center text-muted py-5"
+                            >
+                                Aucune proforma trouvée.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <nav class="mt-3">
+                <ul
+                    class="pagination justify-content-center mb-0"
+                >
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                            >
+                                Précédent
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }}
+                            sur {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.next_page_number }}"
+                            >
+                                Suivant
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

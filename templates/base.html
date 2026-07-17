@@ -90,6 +90,14 @@
                 </a>
 
                 <a
+                    href="{% url 'proforma_list' %}"
+                    class="nav-link {% if current_url == 'proforma_list' or current_url == 'proforma_create' or current_url == 'proforma_detail' or current_url == 'proforma_update' or current_url == 'proforma_print' %}active{% endif %}"
+                >
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Proformas</span>
+                </a>
+
+                <a
                     href="{% url 'sale_list' %}"
                     class="nav-link {% if current_url == 'sale_list' or current_url == 'sale_detail' %}active{% endif %}"
                 >
@@ -492,6 +500,14 @@
                 >
                     <i class="bi bi-cart-check-fill"></i>
                     <span>POS / Vente</span>
+                </a>
+
+                <a
+                    href="{% url 'proforma_list' %}"
+                    class="nav-link {% if current_url == 'proforma_list' or current_url == 'proforma_create' or current_url == 'proforma_detail' or current_url == 'proforma_update' or current_url == 'proforma_print' %}active{% endif %}"
+                >
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Proformas</span>
                 </a>
 
                 <a
