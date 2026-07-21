@@ -1,0 +1,599 @@
+.proforma-pos-page {
+    min-width: 0;
+}
+
+.proforma-pos-layout {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.45fr)
+        minmax(360px, 0.75fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.proforma-pos-panel {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid #e4e7ec;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow:
+        0 10px 28px
+        rgba(15, 23, 42, 0.06);
+}
+
+.proforma-pos-section-header {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.proforma-pos-section-header h5 {
+    margin: 0 0 4px;
+    color: #172033;
+    font-weight: 850;
+}
+
+.proforma-pos-section-header small {
+    color: #667085;
+}
+
+.proforma-count-badge {
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.proforma-catalog {
+    min-height: 720px;
+}
+
+.proforma-catalog-toolbar {
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(190px, 0.34fr);
+    gap: 10px;
+}
+
+.proforma-catalog-search {
+    position: relative;
+}
+
+.proforma-catalog-search > i {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    z-index: 2;
+    color: #98a2b3;
+    font-size: 17px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.proforma-catalog-search .form-control {
+    min-height: 48px;
+    padding-left: 44px;
+    padding-right: 44px;
+    border-radius: 14px;
+}
+
+.proforma-clear-search {
+    position: absolute;
+    top: 50%;
+    right: 7px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #667085;
+    transform: translateY(-50%);
+}
+
+.proforma-clear-search:hover {
+    background: #f2f4f7;
+    color: #172033;
+}
+
+.proforma-category-filter {
+    min-height: 48px;
+    border-radius: 14px;
+}
+
+.proforma-products-state {
+    min-height: 280px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    color: #667085;
+    text-align: center;
+}
+
+.proforma-products-state > i {
+    color: #98a2b3;
+    font-size: 35px;
+}
+
+.proforma-products-state strong {
+    color: #344054;
+    font-size: 15px;
+}
+
+.proforma-product-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(185px, 1fr)
+        );
+    gap: 13px;
+}
+
+.proforma-product-card {
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e4e7ec;
+    border-radius: 17px;
+    background: #ffffff;
+    color: #172033;
+    text-align: left;
+    cursor: pointer;
+    box-shadow:
+        0 6px 18px
+        rgba(15, 23, 42, 0.04);
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.proforma-product-card:hover {
+    border-color: #0f766e;
+    transform: translateY(-2px);
+    box-shadow:
+        0 14px 28px
+        rgba(15, 118, 110, 0.12);
+}
+
+.proforma-product-card:focus-visible {
+    outline: 3px solid
+        rgba(15, 118, 110, 0.20);
+    outline-offset: 2px;
+}
+
+.proforma-product-image {
+    position: relative;
+    height: 145px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background:
+        linear-gradient(
+            145deg,
+            #f8fafc,
+            #eef2f7
+        );
+}
+
+.proforma-product-image img {
+    width: 100%;
+    height: 100%;
+    display: none;
+    object-fit: contain;
+    padding: 10px;
+}
+
+.proforma-product-image img.is-visible {
+    display: block;
+}
+
+.proforma-product-image-fallback {
+    width: 62px;
+    height: 62px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: #ffffff;
+    color: #0f766e;
+    font-size: 27px;
+    box-shadow:
+        0 10px 24px
+        rgba(15, 23, 42, 0.08);
+}
+
+.proforma-product-stock {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    max-width: calc(100% - 18px);
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #ecfdf3;
+    color: #15803d;
+    font-size: 10px;
+    font-weight: 850;
+    overflow-wrap: anywhere;
+}
+
+.proforma-product-stock.is-empty {
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.proforma-product-content {
+    min-width: 0;
+    flex: 1;
+    padding: 13px;
+    display: flex;
+    flex-direction: column;
+}
+
+.proforma-product-category {
+    margin-bottom: 5px;
+    color: #0f766e;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.proforma-product-content > strong {
+    min-height: 42px;
+    display: block;
+    color: #172033;
+    font-size: 14px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.proforma-product-content > small {
+    margin-top: 5px;
+    color: #667085;
+    overflow-wrap: anywhere;
+}
+
+.proforma-product-card-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.proforma-product-card-footer > span:first-child {
+    min-width: 0;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.proforma-add-label {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #0f766e;
+    font-size: 10px;
+    font-weight: 850;
+}
+
+.proforma-cart {
+    position: sticky;
+    top: 88px;
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+}
+
+.proforma-cart-empty {
+    min-height: 220px;
+    padding: 30px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+    color: #667085;
+    text-align: center;
+}
+
+.proforma-cart-empty-icon {
+    width: 66px;
+    height: 66px;
+    display: grid;
+    place-items: center;
+    border-radius: 20px;
+    background: #ecfdf3;
+    color: #0f766e;
+    font-size: 28px;
+}
+
+.proforma-cart-empty strong {
+    color: #344054;
+}
+
+.proforma-cart-lines {
+    display: grid;
+    gap: 12px;
+}
+
+.proforma-cart-line {
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid #e4e7ec;
+    border-radius: 15px;
+    background: #f8fafc;
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.proforma-cart-line-highlight {
+    border-color: #0f766e;
+    background: #ecfdf3;
+    box-shadow:
+        0 0 0 4px
+        rgba(15, 118, 110, 0.10);
+}
+
+.proforma-cart-line-top {
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns:
+        42px
+        minmax(0, 1fr)
+        38px;
+    gap: 10px;
+    align-items: center;
+}
+
+.proforma-cart-product-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #0f766e;
+    font-size: 18px;
+    box-shadow:
+        0 5px 14px
+        rgba(15, 23, 42, 0.05);
+}
+
+.proforma-cart-product-name {
+    min-width: 0;
+}
+
+.proforma-cart-product-name strong,
+.proforma-cart-product-name span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.proforma-cart-product-name strong {
+    color: #172033;
+    font-size: 13px;
+}
+
+.proforma-cart-product-name span {
+    margin-top: 3px;
+    color: #667085;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.proforma-cart-remove {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 11px;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.proforma-cart-remove:hover {
+    background: #fee4e2;
+    color: #912018;
+}
+
+.proforma-cart-fields {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.proforma-cart-fields label {
+    display: block;
+    margin-bottom: 5px;
+    color: #667085;
+    font-size: 9px;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.proforma-cart-fields .form-control {
+    min-height: 40px;
+    padding: 8px 9px;
+    border-radius: 11px;
+    font-size: 12px;
+}
+
+.proforma-cart-line-total {
+    margin-top: 10px;
+    padding-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #e4e7ec;
+}
+
+.proforma-cart-line-total span {
+    color: #667085;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.proforma-cart-line-total strong {
+    color: #172033;
+    font-size: 14px;
+    font-weight: 900;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.proforma-cart-options {
+    margin-top: 16px;
+    padding-top: 16px;
+    display: grid;
+    gap: 13px;
+    border-top: 1px solid #e4e7ec;
+}
+
+.proforma-cart-options textarea {
+    min-height: 76px;
+}
+
+.proforma-cart-summary {
+    margin-top: 16px;
+    padding: 13px;
+    display: grid;
+    gap: 9px;
+    border: 1px solid #d1fae5;
+    border-radius: 15px;
+    background: #f0fdf9;
+}
+
+.proforma-cart-summary > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.proforma-cart-summary span {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.proforma-cart-summary strong {
+    max-width: 62%;
+    color: #172033;
+    font-size: 14px;
+    font-weight: 900;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.proforma-cart-grand-total {
+    padding-top: 10px;
+    border-top: 1px solid #a7f3d0;
+}
+
+.proforma-cart-grand-total span {
+    color: #0f766e;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.proforma-cart-grand-total strong {
+    color: #047857;
+    font-size: 20px;
+}
+
+.proforma-submit-button {
+    min-height: 52px;
+    margin-top: 15px;
+}
+
+.proforma-stock-note {
+    margin: 12px 0 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    color: #667085;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+@media (max-width: 1180px) {
+    .proforma-pos-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .proforma-cart {
+        position: static;
+        max-height: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .proforma-catalog-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .proforma-product-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+    .proforma-cart-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .proforma-pos-panel {
+        padding: 14px;
+        border-radius: 15px;
+    }
+
+    .proforma-pos-section-header {
+        flex-direction: column;
+    }
+
+    .proforma-product-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .proforma-product-image {
+        height: 170px;
+    }
+
+    .proforma-cart-summary > div {
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .proforma-cart-summary strong {
+        max-width: 100%;
+        text-align: left;
+    }
+}

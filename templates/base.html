@@ -32,6 +32,10 @@
         rel="stylesheet"
         href="{% static 'css/report_cards_premium.css' %}"
     >
+    <link
+        href="{% static 'css/stock_notifications.css' %}?v=1"
+        rel="stylesheet"
+    >
 </head>
 
 <body>
@@ -52,8 +56,8 @@
             </div>
 
             <div class="sidebar-brand-text">
-                <h5>Stock Single</h5>
-                <span>Gestion premium</span>
+                <h5>Stock Pro</h5>
+                <span>Gestion Stock</span>
             </div>
         </div>
 
@@ -331,6 +335,8 @@
             </div>
 
             <div class="topbar-actions">
+
+                {% include "includes/stock_notifications.html" %}
 
                 <form
                     method="post"

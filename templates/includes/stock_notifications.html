@@ -1,0 +1,226 @@
+<div class="dropdown stock-notification">
+
+    <button
+        type="button"
+        class="btn stock-notification-button"
+        data-bs-toggle="dropdown"
+        data-bs-auto-close="outside"
+        aria-expanded="false"
+        aria-label="Alertes de stock"
+        title="Alertes de stock"
+    >
+        {% if stock_alert_count > 0 %}
+            <i class="bi bi-bell-fill"></i>
+
+            <span class="stock-notification-badge">
+                {% if stock_alert_count > 99 %}
+                    99+
+                {% else %}
+                    {{ stock_alert_count }}
+                {% endif %}
+            </span>
+        {% else %}
+            <i class="bi bi-bell"></i>
+        {% endif %}
+    </button>
+
+    <div
+        class="dropdown-menu dropdown-menu-end stock-alert-menu"
+    >
+
+        <div class="stock-alert-header">
+
+            <div>
+                <strong>
+                    Alertes de stock
+                </strong>
+
+                <small>
+                    Situation actuelle du catalogue
+                </small>
+            </div>
+
+            <div class="stock-alert-total">
+                {{ stock_alert_count }}
+            </div>
+
+        </div>
+
+        <div class="stock-alert-summary">
+
+            <div class="stock-alert-summary-card is-danger">
+
+                <span>
+                    Ruptures
+                </span>
+
+                <strong>
+                    {{ stock_out_count }}
+                </strong>
+
+            </div>
+
+            <div class="stock-alert-summary-card is-warning">
+
+                <span>
+                    Stock faible
+                </span>
+
+                <strong>
+                    {{ stock_low_count }}
+                </strong>
+
+            </div>
+
+        </div>
+
+        {% if stock_alert_count == 0 %}
+
+            <div class="stock-alert-empty">
+
+                <div class="stock-alert-empty-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+
+                <strong>
+                    Aucun problème de stock
+                </strong>
+
+                <span>
+                    Tous les produits actifs ont une
+                    quantité suffisante.
+                </span>
+
+            </div>
+
+        {% else %}
+
+            <div class="stock-alert-list">
+
+                {% if stock_out_preview %}
+
+                    <div class="stock-alert-section-title">
+                        <i class="bi bi-x-octagon-fill"></i>
+                        Produits en rupture
+                    </div>
+
+                    {% for product in stock_out_preview %}
+
+                        <div class="stock-alert-item">
+
+                            <div
+                                class="stock-alert-product-icon is-danger"
+                            >
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+
+                            <div class="stock-alert-product-info">
+
+                                <strong>
+                                    {{ product.name }}
+                                </strong>
+
+                                <span>
+                                    {% if product.reference %}
+                                        Réf. {{ product.reference }}
+                                        •
+                                    {% endif %}
+
+                                    Stock :
+                                    {{ product.stock_quantity|floatformat:"-2" }}
+
+                                    {% if product.unit %}
+                                        {{ product.unit.short_name }}
+                                    {% endif %}
+                                </span>
+
+                            </div>
+
+                            <span class="stock-alert-status is-danger">
+                                Rupture
+                            </span>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+                {% if stock_low_preview %}
+
+                    <div class="stock-alert-section-title is-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Stock faible
+                    </div>
+
+                    {% for product in stock_low_preview %}
+
+                        <div class="stock-alert-item">
+
+                            <div
+                                class="stock-alert-product-icon is-warning"
+                            >
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+
+                            <div class="stock-alert-product-info">
+
+                                <strong>
+                                    {{ product.name }}
+                                </strong>
+
+                                <span>
+                                    Stock :
+                                    {{ product.stock_quantity|floatformat:"-2" }}
+
+                                    {% if product.unit %}
+                                        {{ product.unit.short_name }}
+                                    {% endif %}
+
+                                    • Minimum :
+                                    {{ product.alert_quantity|floatformat:"-2" }}
+                                </span>
+
+                            </div>
+
+                            <span class="stock-alert-status is-warning">
+                                Faible
+                            </span>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            </div>
+
+            {% if is_admin %}
+
+                <div class="stock-alert-footer">
+
+                    <a
+                        href="{% url 'product_list' %}?stock=zero"
+                        class="stock-alert-footer-link is-danger"
+                    >
+                        <i class="bi bi-x-octagon"></i>
+                        Voir les ruptures
+                    </a>
+
+                    <a
+                        href="{% url 'product_list' %}?stock=low"
+                        class="stock-alert-footer-link is-warning"
+                    >
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Voir les stocks faibles
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+
+</div>

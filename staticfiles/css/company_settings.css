@@ -1,0 +1,72 @@
+.company-settings-page {
+    min-width: 0;
+}
+
+.settings-image-preview {
+    width: 100%;
+    padding: 12px;
+    overflow: hidden;
+    border: 1px solid #e4e7ec;
+    border-radius: 16px;
+    background: #f8fafc;
+}
+
+.settings-image-preview img {
+    display: block;
+    max-width: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.settings-logo-preview img {
+    max-height: 150px;
+}
+
+.settings-header-preview img {
+    width: 100%;
+    max-height: 240px;
+}
+
+.settings-radio-list ul {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+    list-style: none;
+}
+
+.settings-radio-list label {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #e4e7ec;
+    border-radius: 12px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.settings-radio-list input {
+    margin-right: 8px;
+}
+
+.settings-save-bar {
+    position: sticky;
+    bottom: 15px;
+    z-index: 20;
+    margin-top: 24px;
+    padding: 14px;
+    display: flex;
+    justify-content: flex-end;
+    border: 1px solid #e4e7ec;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(10px);
+}
+
+@media (max-width: 767.98px) {
+    .settings-save-bar .btn {
+        width: 100%;
+    }
+}

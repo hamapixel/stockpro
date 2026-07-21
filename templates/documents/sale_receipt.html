@@ -23,6 +23,13 @@
             box-sizing: border-box;
         }
 
+        html,
+        body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             margin: 0;
             background: #f3f4f6;
@@ -31,18 +38,28 @@
             font-size: 13px;
         }
 
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
         .print-actions {
-            max-width: 210mm;
+            width: min(210mm, calc(100% - 24px));
             margin: 14px auto;
             display: flex;
             justify-content: flex-end;
+            flex-wrap: wrap;
             gap: 8px;
         }
 
         .print-actions button,
         .print-actions a {
+            min-height: 42px;
             border: 0;
             padding: 10px 14px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
             border-radius: 10px;
             background: #ffffff;
             color: #111827;
@@ -58,10 +75,11 @@
         }
 
         .document {
-            width: 210mm;
+            width: min(210mm, calc(100% - 24px));
             min-height: 297mm;
             margin: 0 auto 20px;
             padding: 12mm;
+            overflow: hidden;
             background: #ffffff;
             box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
         }
@@ -77,21 +95,25 @@
             margin: 0;
             font-size: 27px;
             text-transform: uppercase;
+            overflow-wrap: anywhere;
         }
 
         .receipt-title p {
             margin: 7px 0 0;
             color: #4b5563;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
         }
 
         .receipt-meta {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px;
             margin-bottom: 22px;
         }
 
         .box {
+            min-width: 0;
             padding: 14px;
             border: 1px solid #e5e7eb;
             border-radius: 14px;
@@ -108,6 +130,7 @@
         .box p {
             margin: 5px 0;
             color: #374151;
+            overflow-wrap: anywhere;
         }
 
         .amount-box {
@@ -135,6 +158,12 @@
             overflow-wrap: anywhere;
         }
 
+        .receipt-table-wrap {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
         table {
             width: 100%;
             margin-top: 18px;
@@ -152,6 +181,7 @@
         tbody td {
             padding: 10px;
             border-bottom: 1px solid #e5e7eb;
+            overflow-wrap: anywhere;
         }
 
         .text-end {
@@ -170,9 +200,16 @@
         .total-row {
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
             gap: 15px;
             padding: 10px 14px;
             border-bottom: 1px solid #e5e7eb;
+        }
+
+        .total-row span,
+        .total-row strong {
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .total-row:last-child {
@@ -190,46 +227,129 @@
             margin-top: 40px;
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
+            flex-direction: row;
+            flex-wrap: nowrap;
             gap: 40px;
         }
 
         .signature {
             width: 45%;
+            min-width: 0;
             padding-top: 45px;
             border-top: 1px solid #111827;
             color: #374151;
             text-align: center;
             font-weight: 700;
+            overflow-wrap: anywhere;
         }
 
         @media (max-width: 767px) {
-            .document {
+            .print-actions {
+                position: sticky;
+                top: 0;
+                z-index: 20;
                 width: 100%;
+                margin: 0;
+                padding: 10px;
+                background: rgba(243, 244, 246, 0.96);
+                backdrop-filter: blur(10px);
+            }
+
+            .print-actions a,
+            .print-actions button {
+                flex: 1 1 130px;
+            }
+
+            .document {
+                width: calc(100% - 12px);
                 min-height: auto;
-                padding: 16px;
+                margin: 6px auto 14px;
+                padding: 14px;
+                border-radius: 14px;
+            }
+
+            .receipt-title {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+
+            .receipt-title h2 {
+                font-size: 21px;
             }
 
             .receipt-meta {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
 
-            .totals,
-            .signature {
+            .box {
+                padding: 12px;
+            }
+
+            .amount-box {
+                margin: 16px 0;
+                padding: 16px 12px;
+            }
+
+            .receipt-table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                min-width: 560px;
+            }
+
+            .totals {
                 width: 100%;
+                margin-top: 16px;
             }
 
+            /* Signatures toujours côte à côte sur téléphone */
             .footer-signatures {
-                flex-direction: column;
+                margin-top: 34px;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .signature {
+                width: calc(50% - 6px);
+                min-width: 0;
+                padding-top: 30px;
+                font-size: 11px;
+                line-height: 1.35;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .footer-signatures {
+                gap: 8px;
+            }
+
+            .signature {
+                width: calc(50% - 4px);
+                padding-top: 26px;
+                font-size: 10px;
             }
         }
 
         @media print {
+            html,
+            body {
+                width: auto;
+                max-width: none;
+                overflow: visible;
+            }
+
             body {
                 background: #ffffff;
             }
 
             .print-actions {
-                display: none;
+                display: none !important;
             }
 
             .document {
@@ -237,7 +357,17 @@
                 min-height: auto;
                 margin: 0;
                 padding: 0;
+                overflow: visible;
+                border-radius: 0;
                 box-shadow: none;
+            }
+
+            .receipt-table-wrap {
+                overflow: visible;
+            }
+
+            table {
+                min-width: 0 !important;
             }
 
             thead {
@@ -247,9 +377,22 @@
             tr,
             .totals,
             .box,
-            .amount-box {
+            .amount-box,
+            .footer-signatures {
                 break-inside: avoid;
                 page-break-inside: avoid;
+            }
+
+            .footer-signatures {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 40px;
+            }
+
+            .signature {
+                width: 45%;
+                padding-top: 40px;
+                font-size: 12px;
             }
         }
     </style>
@@ -258,8 +401,16 @@
 <body>
 
 <div class="print-actions">
-    <a href="{% url 'document_center' %}">Retour</a>
-    <button type="button" onclick="window.print();">Imprimer</button>
+    <a href="{% url 'document_center' %}">
+        Retour
+    </a>
+
+    <button
+        type="button"
+        onclick="window.print();"
+    >
+        Imprimer
+    </button>
 </div>
 
 <div class="document">
@@ -314,6 +465,7 @@
 
             <p>
                 <strong>Vendeur :</strong>
+
                 {% if sale.created_by %}
                     {{ sale.created_by.username }}
                 {% else %}
@@ -328,45 +480,52 @@
         <strong>{{ sale.amount_paid|fcfa }}</strong>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Désignation</th>
-                <th class="text-end">Qté</th>
-                <th class="text-end">PU</th>
-                <th class="text-end">Montant</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for item in items %}
+    <div class="receipt-table-wrap">
+        <table>
+            <thead>
                 <tr>
-                    <td>{{ item.product.name }}</td>
-
-                    <td class="text-end">
-                        {{ item.quantity }}
-                        {% if item.product.unit %}
-                            {{ item.product.unit.short_name }}
-                        {% endif %}
-                    </td>
-
-                    <td class="text-end">
-                        {{ item.unit_price|fcfa }}
-                    </td>
-
-                    <td class="text-end">
-                        <strong>{{ item.total_line|fcfa }}</strong>
-                    </td>
+                    <th>Désignation</th>
+                    <th class="text-end">Qté</th>
+                    <th class="text-end">PU</th>
+                    <th class="text-end">Montant</th>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="4">
-                        Aucun produit dans cette vente.
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>
+                            {{ item.product.name }}
+                        </td>
+
+                        <td class="text-end">
+                            {{ item.quantity }}
+
+                            {% if item.product.unit %}
+                                {{ item.product.unit.short_name }}
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            {{ item.unit_price|fcfa }}
+                        </td>
+
+                        <td class="text-end">
+                            <strong>
+                                {{ item.total_line|fcfa }}
+                            </strong>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            Aucun produit dans cette vente.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <div class="totals">
         <div class="total-row">
@@ -388,8 +547,13 @@
     {% include "documents/partials/company_footer.html" %}
 
     <div class="footer-signatures">
-        <div class="signature">Signature client</div>
-        <div class="signature">Signature vendeur</div>
+        <div class="signature">
+            Signature client
+        </div>
+
+        <div class="signature">
+            Signature vendeur
+        </div>
     </div>
 
 </div>
