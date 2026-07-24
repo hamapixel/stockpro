@@ -107,3 +107,266 @@
         -webkit-print-color-adjust: exact;
     }
 }
+/* =========================================================
+   IMPRESSION FACTURES ET REÇUS — TEXTE LISIBLE ET COULEURS
+========================================================= */
+
+@media print {
+
+    @page {
+        size: A4;
+        margin: 8mm;
+    }
+
+    html,
+    body {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 11pt !important;
+        line-height: 1.35 !important;
+
+        color: #000 !important;
+        background: #fff !important;
+
+        zoom: 1 !important;
+    }
+
+    /* Conserver les couleurs à l’impression */
+    *,
+    *::before,
+    *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    /* Conteneur principal */
+    .invoice-page,
+    .receipt-page,
+    .print-page,
+    .print-document,
+    .document-wrapper {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+
+        transform: none !important;
+        scale: none !important;
+
+        color: #000 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    /* Titres */
+    h1 {
+        font-size: 20pt !important;
+        line-height: 1.15 !important;
+        color: #000 !important;
+        font-weight: 800 !important;
+    }
+
+    h2 {
+        font-size: 16pt !important;
+        line-height: 1.2 !important;
+        color: #000 !important;
+        font-weight: 800 !important;
+    }
+
+    h3 {
+        font-size: 13pt !important;
+        line-height: 1.25 !important;
+        color: #000 !important;
+        font-weight: 700 !important;
+    }
+
+    p,
+    span,
+    div,
+    strong,
+    small,
+    label {
+        color: #000 !important;
+    }
+
+    p,
+    span,
+    div,
+    label {
+        font-size: 10.5pt !important;
+    }
+
+    small,
+    .small,
+    .text-muted {
+        font-size: 9.5pt !important;
+        color: #222 !important;
+    }
+
+    strong,
+    b {
+        font-weight: 800 !important;
+    }
+
+    /* Tableau des produits */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        table-layout: auto !important;
+        font-size: 10pt !important;
+        color: #000 !important;
+    }
+
+    table th {
+        font-size: 10pt !important;
+        font-weight: 800 !important;
+        color: #000 !important;
+        background: #e9ecef !important;
+        border: 1px solid #000 !important;
+        padding: 5px 4px !important;
+        text-align: center !important;
+    }
+
+    table td {
+        font-size: 10pt !important;
+        color: #000 !important;
+        border: 1px solid #333 !important;
+        padding: 5px 4px !important;
+        vertical-align: middle !important;
+    }
+
+    table tbody tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    thead {
+        display: table-header-group !important;
+    }
+
+    tfoot {
+        display: table-footer-group !important;
+    }
+
+    /* Montants */
+    .total,
+    .grand-total,
+    .document-total,
+    .amount-total,
+    .invoice-total {
+        font-size: 13pt !important;
+        font-weight: 900 !important;
+        color: #000 !important;
+    }
+
+    /* Badges et états payé/crédit */
+    .badge,
+    .status-badge {
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        font-size: 9.5pt !important;
+        font-weight: 800 !important;
+        padding: 3px 7px !important;
+    }
+
+    /* Entête et logo */
+    .invoice-custom-header img,
+    .invoice-generated-logo img,
+    .company-logo,
+    .document-logo {
+        display: block !important;
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+
+    .invoice-custom-header {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        margin-bottom: 5mm !important;
+    }
+
+    /* Informations client et société */
+    .company-info,
+    .client-info,
+    .document-info,
+    .invoice-info,
+    .receipt-info {
+        font-size: 10.5pt !important;
+        color: #000 !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Pied, conditions et signatures */
+    .invoice-footer,
+    .receipt-footer,
+    .document-footer,
+    .signature-section,
+    .signatures {
+        font-size: 9.5pt !important;
+        color: #000 !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Empêcher les éléments utiles de disparaître */
+    .d-print-block {
+        display: block !important;
+    }
+
+    .d-print-flex {
+        display: flex !important;
+    }
+
+    /* Cacher seulement les boutons et menus */
+    .no-print,
+    .sidebar,
+    .topbar,
+    .navbar,
+    .btn,
+    button,
+    form.print-button-form {
+        display: none !important;
+    }
+
+    a {
+        color: #000 !important;
+        text-decoration: none !important;
+    }
+}
+@media print {
+    body.receipt-print {
+        width: 80mm !important;
+        margin: 0 !important;
+        padding: 2mm !important;
+        font-size: 10pt !important;
+    }
+
+    body.receipt-print .receipt-page {
+        width: 76mm !important;
+        max-width: 76mm !important;
+        margin: 0 auto !important;
+    }
+
+    body.receipt-print table {
+        font-size: 9pt !important;
+    }
+
+    body.receipt-print table th,
+    body.receipt-print table td {
+        font-size: 9pt !important;
+        padding: 3px 2px !important;
+    }
+
+    body.receipt-print .grand-total,
+    body.receipt-print .receipt-total {
+        font-size: 12pt !important;
+        font-weight: 900 !important;
+    }
+}
