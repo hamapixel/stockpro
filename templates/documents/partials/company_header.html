@@ -8,29 +8,24 @@
             class="invoice-custom-header"
             style="--invoice-header-height: {{ company_settings.invoice_header_height_mm }}mm;"
         >
-            {% if company_settings.invoice_header %}
-                <img
-                    src="{{ company_settings.invoice_header.url }}"
-                    alt="Entête {{ company_settings.company_name }}"
-                >
-            {% else %}
-                <img
-                    src="{% static 'images/msf_invoice_header.jpg' %}"
-                    alt="Entête MSF - SARL"
-                >
-            {% endif %}
+            <img
+                src="{% static 'images/msf_invoice_header.png' %}"
+                alt="Entête {{ company_settings.company_name }}"
+                loading="eager"
+            >
         </header>
 
     {% else %}
 
         <header class="invoice-generated-header">
 
-            {% if company_settings.logo and company_settings.show_logo_on_generated_header %}
+            {% if company_settings.show_logo_on_generated_header %}
 
                 <div class="invoice-generated-logo">
                     <img
-                        src="{{ company_settings.logo.url }}"
+                        src="{% static 'images/company_logo.png' %}"
                         alt="{{ company_settings.company_name }}"
+                        loading="eager"
                     >
                 </div>
 
@@ -65,7 +60,9 @@
             <div class="invoice-company-contact">
 
                 {% if company_settings.address %}
-                    <div>{{ company_settings.address|linebreaksbr }}</div>
+                    <div>
+                        {{ company_settings.address|linebreaksbr }}
+                    </div>
                 {% endif %}
 
                 {% if company_settings.phone %}
