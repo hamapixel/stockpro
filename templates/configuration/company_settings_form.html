@@ -18,8 +18,8 @@
             <h3>Paramètres de la société</h3>
 
             <p>
-                Les informations et l’entête seront utilisées
-                automatiquement sur les factures.
+                Les informations seront utilisées automatiquement
+                sur les factures, reçus et documents.
             </p>
         </div>
 
@@ -59,14 +59,20 @@
                     <div class="panel-header">
                         <div>
                             <h5>Identité de la société</h5>
-                            <small>Informations visibles sur les documents</small>
+
+                            <small>
+                                Informations visibles sur les documents
+                            </small>
                         </div>
                     </div>
 
                     <div class="row g-3">
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Nom de la société</label>
+                            <label class="form-label">
+                                Nom de la société
+                            </label>
+
                             {{ form.company_name }}
 
                             {% for error in form.company_name.errors %}
@@ -77,63 +83,171 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Raison sociale</label>
+                            <label class="form-label">
+                                Raison sociale
+                            </label>
+
                             {{ form.legal_name }}
+
+                            {% for error in form.legal_name.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Activité</label>
+                            <label class="form-label">
+                                Activité
+                            </label>
+
                             {{ form.activity }}
+
+                            {% for error in form.activity.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Slogan</label>
+                            <label class="form-label">
+                                Slogan
+                            </label>
+
                             {{ form.slogan }}
+
+                            {% for error in form.slogan.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Adresse</label>
+                            <label class="form-label">
+                                Adresse
+                            </label>
+
                             {{ form.address }}
+
+                            {% for error in form.address.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Téléphone principal</label>
+                            <label class="form-label">
+                                Téléphone principal
+                            </label>
+
                             {{ form.phone }}
+
+                            {% for error in form.phone.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Téléphone secondaire</label>
+                            <label class="form-label">
+                                Téléphone secondaire
+                            </label>
+
                             {{ form.phone_secondary }}
+
+                            {% for error in form.phone_secondary.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">E-mail</label>
+                            <label class="form-label">
+                                E-mail
+                            </label>
+
                             {{ form.email }}
+
+                            {% for error in form.email.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Site web</label>
+                            <label class="form-label">
+                                Site web
+                            </label>
+
                             {{ form.website }}
+
+                            {% for error in form.website.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">RCCM</label>
+                            <label class="form-label">
+                                RCCM
+                            </label>
+
                             {{ form.rccm }}
+
+                            {% for error in form.rccm.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">NIF</label>
+                            <label class="form-label">
+                                NIF
+                            </label>
+
                             {{ form.nif }}
+
+                            {% for error in form.nif.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Coordonnées bancaires</label>
+                            <label class="form-label">
+                                Coordonnées bancaires
+                            </label>
+
                             {{ form.bank_details }}
+
+                            {% for error in form.bank_details.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Devise affichée</label>
+                            <label class="form-label">
+                                Devise affichée
+                            </label>
+
                             {{ form.currency_label }}
+
+                            {% for error in form.currency_label.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                     </div>
@@ -145,7 +259,10 @@
                     <div class="panel-header">
                         <div>
                             <h5>Pied des factures</h5>
-                            <small>Message et conditions commerciales</small>
+
+                            <small>
+                                Message et conditions commerciales
+                            </small>
                         </div>
                     </div>
 
@@ -155,14 +272,28 @@
                             <label class="form-label">
                                 Message de pied de facture
                             </label>
+
                             {{ form.invoice_footer_text }}
+
+                            {% for error in form.invoice_footer_text.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <div class="col-12">
                             <label class="form-label">
                                 Conditions ou observations
                             </label>
+
                             {{ form.invoice_terms }}
+
+                            {% for error in form.invoice_terms.errors %}
+                                <div class="text-danger small fw-bold mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                     </div>
@@ -177,39 +308,24 @@
 
                     <div class="panel-header">
                         <div>
-                            <h5>Logo</h5>
-                            <small>PNG, JPG ou WEBP — maximum 5 Mo</small>
+                            <h5>Logo MSF-SARL</h5>
+
+                            <small>
+                                Logo permanent utilisé sur Render
+                            </small>
                         </div>
                     </div>
 
-                    {% if company_settings.logo %}
-                        <div class="settings-image-preview settings-logo-preview">
-                            <img
-                                src="{{ company_settings.logo.url }}"
-                                alt="Logo actuel"
-                            >
-                        </div>
+                    <div class="settings-image-preview settings-logo-preview">
+                        <img
+                            src="{% static 'images/company_logo.png' %}"
+                            alt="Logo MSF-SARL"
+                        >
+                    </div>
 
-                        <div class="form-check mt-3">
-                            {{ form.remove_logo }}
-
-                            <label
-                                class="form-check-label"
-                                for="{{ form.remove_logo.id_for_label }}"
-                            >
-                                Supprimer le logo actuel
-                            </label>
-                        </div>
-                    {% endif %}
-
-                    <div class="mt-3">
-                        {{ form.logo }}
-
-                        {% for error in form.logo.errors %}
-                            <div class="text-danger small fw-bold mt-1">
-                                {{ error }}
-                            </div>
-                        {% endfor %}
+                    <div class="alert alert-info mt-3 mb-0">
+                        Le logo utilisé par l’application provient du fichier
+                        <strong>static/images/company_logo.png</strong>.
                     </div>
 
                 </div>
@@ -221,7 +337,7 @@
                             <h5>Entête des factures</h5>
 
                             <small>
-                                Choisissez l’entête MSF ou une entête
+                                Choisissez une entête en image ou une entête
                                 automatique avec vos informations.
                             </small>
                         </div>
@@ -229,47 +345,24 @@
 
                     <div class="settings-radio-list mb-3">
                         {{ form.invoice_header_mode }}
-                    </div>
 
-                    <div class="settings-image-preview settings-header-preview">
-                        {% if company_settings.invoice_header %}
-                            <img
-                                src="{{ company_settings.invoice_header.url }}"
-                                alt="Entête actuelle"
-                            >
-                        {% else %}
-                            <img
-                                src="{% static 'images/msf_invoice_header.jpg' %}"
-                                alt="Entête MSF par défaut"
-                            >
-                        {% endif %}
-                    </div>
-
-                    {% if company_settings.invoice_header %}
-                        <div class="form-check mt-3">
-                            {{ form.remove_invoice_header }}
-
-                            <label
-                                class="form-check-label"
-                                for="{{ form.remove_invoice_header.id_for_label }}"
-                            >
-                                Revenir à l’entête MSF par défaut
-                            </label>
-                        </div>
-                    {% endif %}
-
-                    <div class="mt-3">
-                        <label class="form-label">
-                            Remplacer l’image d’entête
-                        </label>
-
-                        {{ form.invoice_header }}
-
-                        {% for error in form.invoice_header.errors %}
+                        {% for error in form.invoice_header_mode.errors %}
                             <div class="text-danger small fw-bold mt-1">
                                 {{ error }}
                             </div>
                         {% endfor %}
+                    </div>
+
+                    <div class="settings-image-preview settings-header-preview">
+                        <img
+                            src="{% static 'images/msf_invoice_header.jpg' %}"
+                            alt="Entête MSF-SARL"
+                        >
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        L’entête en image provient du fichier
+                        <strong>static/images/msf_invoice_header.jpg</strong>.
                     </div>
 
                     <div class="mt-3">
@@ -284,6 +377,12 @@
                                 {{ form.invoice_header_height_mm.help_text }}
                             </small>
                         {% endif %}
+
+                        {% for error in form.invoice_header_height_mm.errors %}
+                            <div class="text-danger small fw-bold mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
                     </div>
 
                     <div class="form-check mt-3">
@@ -295,11 +394,19 @@
                         >
                             Afficher le logo sur l’entête automatique
                         </label>
+
+                        {% for error in form.show_logo_on_generated_header.errors %}
+                            <div class="text-danger small fw-bold mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
                     </div>
 
-                    <div class="alert alert-info mt-3 mb-0">
-                        L’image est redimensionnée automatiquement sans
-                        être déformée.
+                    <div class="alert alert-secondary mt-3 mb-0">
+                        Pour remplacer définitivement le logo ou l’entête,
+                        remplace les fichiers dans le dossier
+                        <strong>static/images</strong>, puis envoie les
+                        modifications sur GitHub.
                     </div>
 
                 </div>
