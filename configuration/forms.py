@@ -1,10 +1,17 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
 
 from .models import CompanySettings
 
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+ALLOWED_IMAGE_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+}
 
 
 class CompanySettingsForm(forms.ModelForm):
@@ -174,10 +181,38 @@ class CompanySettingsForm(forms.ModelForm):
         }
 
     def _validate_image(self, image, field_label):
-        if image and image.size > MAX_IMAGE_SIZE:
+        if not image:
+            return image
+
+        # Ne valider que les NOUVEAUX fichiers envoyés.
+        # Un ancien ImageField peut pointer vers un fichier media
+        # absent sur Render. Lire image.size dans ce cas provoque
+        # une erreur serveur 500.
+        if not isinstance(image, UploadedFile):
+            return image
+
+        if image.size > MAX_IMAGE_SIZE:
             raise ValidationError(
                 f"{field_label} ne doit pas dépasser 5 Mo."
             )
+
+        content_type = getattr(
+            image,
+            "content_type",
+            "",
+        )
+
+        if (
+            content_type
+            and content_type not in ALLOWED_IMAGE_TYPES
+        ):
+            raise ValidationError(
+                (
+                    f"{field_label} doit être une image "
+                    "PNG, JPG/JPEG ou WEBP."
+                )
+            )
+
         return image
 
     def clean_logo(self):
